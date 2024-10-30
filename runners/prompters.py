@@ -1,9 +1,17 @@
+import json
+import tiktoken
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Custom
+from parsers import *
+
 # !!!!!!!!!!!!!!!!!!!!!!!!!!
 # COPIED FROM PRIMEVUL. NEED TO EDIT
 # !!!!!!!!!!!!!!!!!!!!!!!!!!
-import json
-import tiktoken
-
+# How do I want to handle message truncation? Should I allow, or pass over?
 def truncate_tokens_from_messages(messages, model, max_gen_length):
     """
     Count the number of tokens used by a list of messages, 
@@ -28,34 +36,28 @@ def truncate_tokens_from_messages(messages, model, max_gen_length):
     num_tokens = 3  # every reply is primed with <|start|>assistant<|message|>
     trunc_messages = []
     for message in messages:
-        tm = {}
         num_tokens += tokens_per_message
-        for key, value in message.items():
-            encoded_value = encoding.encode(value)
+        tm = ()
+        for val in message:
+            encoded_value = encoding.encode(val)
             num_tokens += len(encoded_value)
             if num_tokens > max_tokens:
-                print(f"Truncating message: {value[:100]}...")
-                tm[key] = encoding.decode(encoded_value[:max_tokens - num_tokens])
+                print(f"Truncating message: {val[:100]}...")
+                tm += (encoding.decode(encoded_value[:max_tokens - num_tokens]),)
                 break
             else:
-                tm[key] = value
+                tm += (val,)
         trunc_messages.append(tm)
     return trunc_messages
 
-
-def construct_prompts(input_file, inst):
-    with open(input_file, "r") as f:
-        samples = f.readlines()
-    samples = [json.loads(sample) for sample in samples]
-    prompts = []
+# !!!!!!!!!!!!!!!!!!!!!!!!!!
+# My Work
+# !!!!!!!!!!!!!!!!!!!!!!!!!!
+def form_prompt(src, prompt, limit=-1):
+    if src == 'BRYSON':
+        samples = get_bryson_data(os.getenv('bryson'), limit)
+    elif src == 'PRIMEVUL':
+        samples = get_primevul_data(os.getenv('primevul'), limit)
     for sample in samples:
-        key = sample["project"] + "_" + sample["commit_id"]
-        p = {"sample_key": key}
-        p["func"] = sample["func"]
-        p["target"] = sample["target"]
-        p["prompt"] = inst.format(func=sample["func"])
-        prompts.append(p)
-        break
-    return prompts
-
-# print(construct_prompts(r'D:\grad_research_2\datasets\PrimeVul\primevul_test_paired.jsonl',PROMPT_INST))
+        sample['prompt'] = prompt.format(func = sample['func'])
+    return samples

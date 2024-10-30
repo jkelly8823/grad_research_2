@@ -100,10 +100,12 @@ app = workflow.compile()
 # PROMPTS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-primevul = construct_prompts(r'D:\grad_research_2\datasets\PrimeVul\primevul_test_paired.jsonl',PROMPT_INST)
+samples = form_prompt('BRYSON',PROMPT_INST, 1)
 
-msgs = [entry["prompt"] for entry in primevul if "prompt" in entry]
-print(msgs)
+msgs = [("human",entry["prompt"]) for entry in samples if "prompt" in entry]
+msgs.insert(0,("system", SYS_INST))
+msgs = truncate_tokens_from_messages(msgs, "claude-3-haiku-20240307", 2048)
+# print(msgs)
 
 # One-Off Sample
 # test_code_snip = (
@@ -130,6 +132,6 @@ print(msgs)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-# # example with a single tool call
-# for chunk in app.stream({"messages": msgs}, stream_mode="values"):
-#     chunk["messages"][-1].pretty_print()
+# example with a single tool call
+for chunk in app.stream({"messages": msgs}, stream_mode="values"):
+    chunk["messages"][-1].pretty_print()
