@@ -167,5 +167,3 @@ cython_debug/
 # Space Saving
 analyzers/
 !analyzers/.gitkeep
-# datasets/*
-# !datasets/.gitkeep
