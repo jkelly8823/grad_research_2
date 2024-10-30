@@ -100,12 +100,9 @@ app = workflow.compile()
 # PROMPTS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-samples = form_prompt('BRYSON',PROMPT_INST, 1)
-
-msgs = [("human",entry["prompt"]) for entry in samples if "prompt" in entry]
-msgs.insert(0,("system", SYS_INST))
-msgs = truncate_tokens_from_messages(msgs, "claude-3-haiku-20240307", 2048)
-# print(msgs)
+samples, convos = form_prompts('BRYSON',PROMPT_INST, 2)
+convos = truncate_tokens_from_messages(convos, "claude-3-haiku-20240307", 2048)
+# print(convos)
 
 # One-Off Sample
 # test_code_snip = (
@@ -128,10 +125,10 @@ msgs = truncate_tokens_from_messages(msgs, "claude-3-haiku-20240307", 2048)
 # msgs = [("human", f"Is this {test_code_ext} code vulnerable?\n\n{test_code_snip}")]
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Sample Calls to ReAct Agent
+# CALL ReAct AGENT
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-# example with a single tool call
-for chunk in app.stream({"messages": msgs}, stream_mode="values"):
-    chunk["messages"][-1].pretty_print()
+for msgs in convos:
+    for chunk in app.stream({"messages": msgs}, stream_mode="values"):
+        chunk["messages"][-1].pretty_print()
+    print("~"*50, "~"*50, "~"*50, sep='\n')

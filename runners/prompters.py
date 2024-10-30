@@ -7,12 +7,13 @@ load_dotenv()
 
 # Custom
 from parsers import *
+from prompts import *
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!
-# COPIED FROM PRIMEVUL. NEED TO EDIT
+# MOSTLY COPIED FROM PRIMEVUL. NEED TO EDIT
 # !!!!!!!!!!!!!!!!!!!!!!!!!!
 # How do I want to handle message truncation? Should I allow, or pass over?
-def truncate_tokens_from_messages(messages, model, max_gen_length):
+def truncate_tokens_from_messages(conversations, model, max_gen_length):
     """
     Count the number of tokens used by a list of messages, 
     and truncate the messages if the number of tokens exceeds the limit.
@@ -33,31 +34,37 @@ def truncate_tokens_from_messages(messages, model, max_gen_length):
     
     tokens_per_message = 3
 
-    num_tokens = 3  # every reply is primed with <|start|>assistant<|message|>
-    trunc_messages = []
-    for message in messages:
-        num_tokens += tokens_per_message
-        tm = ()
-        for val in message:
-            encoded_value = encoding.encode(val)
-            num_tokens += len(encoded_value)
-            if num_tokens > max_tokens:
-                print(f"Truncating message: {val[:100]}...")
-                tm += (encoding.decode(encoded_value[:max_tokens - num_tokens]),)
-                break
-            else:
-                tm += (val,)
-        trunc_messages.append(tm)
-    return trunc_messages
+    trunc_convos = []
+    for messages in conversations:
+        num_tokens = 3  # every reply is primed with <|start|>assistant<|message|>
+        trunc_messages = []
+        for message in messages:
+            num_tokens += tokens_per_message
+            tm = ()
+            for val in message:
+                encoded_value = encoding.encode(val)
+                num_tokens += len(encoded_value)
+                if num_tokens > max_tokens:
+                    print(f"Truncating message: {val[:100]}...")
+                    tm += (encoding.decode(encoded_value[:max_tokens - num_tokens]),)
+                    break
+                else:
+                    tm += (val,)
+            trunc_messages.append(tm)
+        trunc_convos.append(trunc_messages)
+    return trunc_convos
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!
 # My Work
 # !!!!!!!!!!!!!!!!!!!!!!!!!!
-def form_prompt(src, prompt, limit=-1):
+def form_prompts(src, prompt, limit=-1):
+    prompts = []
+    sys = ("system", SYS_INST)
     if src == 'BRYSON':
         samples = get_bryson_data(os.getenv('bryson'), limit)
     elif src == 'PRIMEVUL':
         samples = get_primevul_data(os.getenv('primevul'), limit)
     for sample in samples:
         sample['prompt'] = prompt.format(func = sample['func'])
-    return samples
+        prompts.append([sys, ("human", sample['prompt'])])
+    return [samples, prompts]

@@ -4,7 +4,6 @@ import re
 def bryson_backlash_fixer(text):
     # Find all standalone '\n' occurrences (not preceded by a backslash)
     matches = list(re.finditer(r'(?<!\\)\n', text))
-    print('LEN:', len(matches))
 
     # Only replace up to the last two standalone '\n' instances
     while len(matches) > 2:
