@@ -2,7 +2,7 @@ import getpass
 import os
 from dotenv import load_dotenv
 from typing import Literal
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.tools import tool
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import StateGraph, MessagesState, START, END
@@ -37,7 +37,17 @@ def run_flawfinder(code_sample: str, file_suffix: str) -> str:
     """Call to run the Flawfinder static analysis tool."""
     return go_flawfinder(code_sample, file_suffix)
 
-tools = [run_flawfinder]
+@tool
+def run_cppcheck(code_sample: str, file_suffix: str) -> str:
+    """Call to run the CppCheck static analysis tool."""
+    return go_cppcheck(code_sample, file_suffix)
+
+@tool
+def run_appinspector(code_sample: str, file_suffix: str) -> str:
+    """Call to run the AppInspector static analysis tool."""
+    return go_appinspector(code_sample, file_suffix)
+
+tools = [run_flawfinder, run_cppcheck, run_appinspector]
 tool_node = ToolNode(tools)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -79,6 +89,7 @@ workflow.add_node("tools", tool_node)
 workflow.add_edge(START, "agent")
 workflow.add_conditional_edges("agent", should_continue, ["tools", END])
 workflow.add_edge("tools", "agent")
+# workflow.add_conditional_edges("tools", should_continue, ["tools", "agent"])
 
 app = workflow.compile()
 
@@ -128,7 +139,20 @@ convos = truncate_tokens_from_messages(convos, "claude-3-haiku-20240307", 2048)
 # CALL ReAct AGENT
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+print_steps = True
+outputs = []
 for msgs in convos:
     for chunk in app.stream({"messages": msgs}, stream_mode="values"):
-        chunk["messages"][-1].pretty_print()
+        if print_steps:
+            outputs.append(chunk["messages"][-1])
+        else:
+            # Filter to only append user and AI responses, not tool calls
+            if type(chunk["messages"][-1]) == HumanMessage:
+                outputs.append(chunk["messages"][-1])
+            elif type(chunk["messages"][-1]) == AIMessage:
+                # print(chunk["messages"][-1])
+                if chunk["messages"][-1].response_metadata['stop_reason'] == 'end_turn':
+                    outputs.append(chunk["messages"][-1])
+    for out in outputs:
+        out.pretty_print()
     print("~"*50, "~"*50, "~"*50, sep='\n')

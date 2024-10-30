@@ -165,7 +165,7 @@ cython_debug/
 .scannerwork
 
 # Space Saving
-analyzers/*
-!analyzers/.gitkeep
+analyzers/
+# !analyzers/.gitkeep
 datasets/*
 !datasets/.gitkeep
