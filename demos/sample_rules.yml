@@ -1,0 +1,48 @@
+rules:
+  - id: buffer-overflow
+    patterns:
+      - pattern: |
+          char $VAR[$SIZE];
+          $DATA
+          strcpy($VAR, $DATA);
+      - pattern: |
+          char $VAR[$SIZE];
+          $DATA
+          memcpy($VAR, $DATA, $SIZE2);
+          # if SIZE2 > SIZE, this can cause buffer overflow
+    message: "Potential Buffer Overflow: ensure that data copied to the buffer does not exceed its size."
+    severity: ERROR
+    languages:
+      - c
+      - cpp
+    metadata:
+      category: security
+      technology: buffer_overflow
+
+  - id: unsafe-strcpy
+    patterns:
+      - pattern: |
+          strcpy($DEST, $SRC)
+      - pattern: |
+          strcat($DEST, $SRC)
+    message: "Unsafe function usage: 'strcpy' or 'strcat' may lead to buffer overflows. Consider using 'strncpy' or 'strncat'."
+    severity: ERROR
+    languages:
+      - c
+      - cpp
+    metadata:
+      category: security
+      technology: buffer_overflow
+
+  - id: buffer-overflow-in-sprintf
+    patterns:
+      - pattern: |
+          sprintf($DEST, $FORMAT, ...)
+    message: "Potential buffer overflow in 'sprintf': consider using 'snprintf' to limit the number of characters written."
+    severity: WARNING
+    languages:
+      - c
+      - cpp
+    metadata:
+      category: security
+      technology: buffer_overflow
