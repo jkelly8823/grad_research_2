@@ -1,3 +1,4 @@
+from langchain_core.messages import HumanMessage, SystemMessage
 import json
 import tiktoken
 import os
@@ -29,7 +30,7 @@ def truncate_tokens_from_messages(conversations, model, max_gen_length):
     try:
         encoding = tiktoken.encoding_for_model(model)
     except KeyError:
-        print("Warning: model not found. Using cl100k_base encoding.")
+        # print("Warning: model not found. Using cl100k_base encoding.")
         encoding = tiktoken.get_encoding("cl100k_base")
     
     tokens_per_message = 3
@@ -66,5 +67,6 @@ def form_prompts(src, prompt, limit=-1):
         samples = get_primevul_data(os.getenv('primevul'), limit)
     for sample in samples:
         sample['prompt'] = prompt.format(func = sample['func'])
-        prompts.append([sys, ("human", sample['prompt'])])
+        # prompts.append([sys, ("human", sample['prompt'])])
+        prompts.append([("human", sample['prompt'])])
     return [samples, prompts]

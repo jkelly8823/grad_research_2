@@ -1,3 +1,12 @@
+SAST_PROMPT = """Please determine the necessary file type, then run all relevant tools to analyze the following code:
+```
+{func}
+```
+
+Only reply with the response from your tool call. Do not include any further information.
+"""
+
+
 # !!!!!!!!!!!!!!!!!!!!!!!!!!
 # COPIED FROM PRIMEVUL. NEED TO EDIT
 # !!!!!!!!!!!!!!!!!!!!!!!!!!

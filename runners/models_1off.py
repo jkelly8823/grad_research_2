@@ -47,7 +47,12 @@ def run_appinspector(code_sample: str, file_suffix: str) -> str:
     """Call to run the AppInspector static analysis tool."""
     return go_appinspector(code_sample, file_suffix)
 
-tools = [run_flawfinder, run_cppcheck, run_appinspector]
+@tool
+def run_semgrep(code_sample: str, file_suffix: str) -> str:
+    """Call to run the Semgrep static analysis tool."""
+    return go_semgrep(code_sample, file_suffix)
+
+tools = [run_flawfinder, run_cppcheck, run_appinspector, run_semgrep]
 tool_node = ToolNode(tools)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
