@@ -1,13 +1,17 @@
 import getpass
 import os
+import io
+import operator
+import functools
 from dotenv import load_dotenv
-from typing import Literal
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from typing import Literal, Annotated, Sequence
+from typing_extensions import TypedDict
+from langchain_core.messages import AIMessage, HumanMessage, BaseMessage, ToolMessage, SystemMessage, ChatMessage
 from langchain_core.tools import tool
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import StateGraph, MessagesState, START, END
 from PIL import Image
-import io
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 # Model Specific
 from langchain_anthropic import ChatAnthropic
@@ -93,15 +97,6 @@ analysis_model = ChatAnthropic(
 # ReAct AGENTS LANGGRAPH
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-from langchain_core.messages import (
-    BaseMessage,
-    HumanMessage,
-    ToolMessage,
-)
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-
-from langgraph.graph import END, StateGraph, START
-
 def create_agent(llm, tools, system_message: str):
     """Create an agent."""
     prompt = ChatPromptTemplate.from_messages(
@@ -113,8 +108,6 @@ def create_agent(llm, tools, system_message: str):
                 " If you are unable to fully answer, that's OK, another assistant with different tools "
                 " will help where you left off. Execute what you can to make progress."
                 " You are not allowed to return an empty response under any circumstance, instead state DONE."
-                # " If you are the Summarizer, and you are summarizing the final output from the Analyzer,"
-                # " prefix your response with FINAL ANSWER so the team knows to stop."
                 " You have access to the following tools: {tool_names}.\n{system_message}",
             ),
             MessagesPlaceholder(variable_name="messages"),
@@ -149,15 +142,6 @@ analyze_agent = create_agent(
     other_tools,
     system_message="You should use the provided information to detect all potential vulnerabilties in the originally presented code sample. You may request additional information. You should avoid false positives and false negatives."
 )
-
-import operator
-from typing import Annotated, Sequence
-from typing_extensions import TypedDict
-from langchain_openai import ChatOpenAI
-import functools
-from langchain_core.messages import AIMessage, ChatMessage, HumanMessage
-from langgraph.prebuilt import ToolNode
-from typing import Literal
 
 # !!!!!!!!!!!!! DEFINE STATE !!!!!!!!!!!!!
 
@@ -294,15 +278,16 @@ graph = workflow.compile()
 # ReAct AGENTS GRAPH VIEWER
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# try:
-#     # Get the PNG image as bytes
-#     img_data = graph.get_graph().draw_mermaid_png()  # Image data in bytes
+try:
+    # Get the PNG image as bytes
+    img_data = graph.get_graph().draw_mermaid_png()  # Image data in bytes
 
-#     # Use BytesIO to open the image directly from bytes
-#     img = Image.open(io.BytesIO(img_data))
-#     img.show()  # This opens the image with the default viewer without saving it to disk
-# except Exception as e:
-#     print(f"Error displaying image: {e}")
+    # Use BytesIO to open the image directly from bytes
+    img = Image.open(io.BytesIO(img_data))
+    img.show()  # This opens the image with the default viewer without saving it to disk
+    img.save('./misc/TOOLRAG_LangGraph_Img.png')
+except Exception as e:
+    print(f"Error displaying image: {e}")
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # PROMPTS
