@@ -14,7 +14,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_anthropic import ChatAnthropic
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 
 from langgraph.graph import START, END, StateGraph
 
@@ -38,26 +38,44 @@ _set_env("ANTHROPIC_API_KEY")
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # PARSE SOURCES CREATE KB WITH RETRIEVER
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def getDocChunks():
+    # Load documents from XML
+    docs = load_cwe_from_xml(os.getenv('CWE_SRC'))
 
-# Load documents from XML
-docs = load_cwe_from_xml(os.getenv('CWE'))
+    # Split documents into smaller chunks
+    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        chunk_size=250, chunk_overlap=0
+    )
+    doc_splits = text_splitter.split_documents(docs)
 
-# Split documents into smaller chunks
-text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-    chunk_size=250, chunk_overlap=0
-)
-doc_splits = text_splitter.split_documents(docs)
+    return doc_splits
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # CREATE KB WITH RETRIEVER
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Add to vector store
-vectorstore = Chroma.from_documents(
-    documents=doc_splits,
-    collection_name="rag-cwe",
-    embedding=OpenAIEmbeddings(),
-)
+# Define the persist directory path
+persist_directory = os.getenv('RAG_PERSIST')
+
+# Check if vectorstore already exists
+if os.path.exists(persist_directory):
+    # Load existing vectorstore
+    vectorstore = Chroma(
+        collection_name="TOOLRAG",
+        embedding_function=OpenAIEmbeddings(),
+        persist_directory=persist_directory
+    )
+    print("Loaded existing vectorstore.")
+else:
+    # Vectorstore doesn't exist, create it and add documents
+    vectorstore = Chroma.from_documents(
+        documents=getDocChunks(),  # Ensure this function provides the document chunks
+        collection_name="TOOLRAG",
+        embedding=OpenAIEmbeddings(),
+        persist_directory=persist_directory
+    )
+    vectorstore.persist()  # Save the vectorstore to disk
+    print("Created new vectorstore and added documents.")
 # Document Retriever
 retriever = vectorstore.as_retriever()
 

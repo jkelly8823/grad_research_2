@@ -83,14 +83,14 @@ def load_cwe_from_xml(file_path: str) -> list:
         
         docs.append(Document(page_content=content, metadata={"cwe_id": cwe_id, "name": name, "description": description}))
         
-        if len(docs) > 1:
-            break
-    
+        # if len(docs) > 1:
+        #     break
+
     return docs
 
 # from dotenv import load_dotenv
 # import os
 # load_dotenv()
-# tmp = load_cwe_from_xml(os.getenv('CWE'))
+# tmp = load_cwe_from_xml(os.getenv('CWE_SRC'))
 # print(tmp)
 # print("LEN:", len(tmp))

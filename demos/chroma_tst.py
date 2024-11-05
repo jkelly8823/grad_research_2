@@ -2,7 +2,7 @@
 # from dotenv import load_dotenv
 # import os
 # load_dotenv()
-# tmp = load_cwe_from_xml(os.getenv('CWE'))
+# tmp = load_cwe_from_xml(os.getenv('CWE_SRC'))
 # print(tmp)
 
 
@@ -50,7 +50,7 @@ from langchain_anthropic import ChatAnthropic
 from cwe_parser import load_cwe_from_xml
 from langchain_community.document_loaders import UnstructuredXMLLoader
 
-tmp = load_cwe_from_xml(os.getenv('CWE'))
+tmp = load_cwe_from_xml(os.getenv('CWE_SRC'))
 print(tmp)
 # exit()
 
