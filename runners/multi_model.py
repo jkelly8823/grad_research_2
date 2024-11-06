@@ -20,6 +20,7 @@ from langchain_anthropic import ChatAnthropic
 from sasts import *
 from prompts import *
 from prompters import *
+from rag import rag_graph
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # LOGIN
@@ -150,34 +151,60 @@ analyze_agent = create_agent(
 class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], operator.add]
     sender: str
-    # humanNext: bool
+    target: str
 
 # !!!!!!!!!!!!! DEFINE AGENT NODES !!!!!!!!!!!!!
 
+# Function to run RAG subgraph
+def call_rag(state):
+    rag_input = {'question': state['messages'][-1].dict().get('content', '')}
+    rag_output = rag_graph.invoke(rag_input)
+    print(rag_output)
+    return {
+        'messages': [AIMessage(rag_output['generation'], name='Rag_subgraph')],
+        'sender': 'Rag_subgraph',
+        'target': 'Prompter_node'
+    }
+
 # Fake Human Node to provide checkpoint prompts
 def human_feedback(state):
-    if state['messages'][-1].name == 'Sast_runner':
-        prompt = "Please summarize the results of the static analyses produced by Sast_runner."
-    elif state['messages'][-1].name == 'Analyzer':
-        prompt = "Do not directly use the Sast_runner outputs. Please summarize the results of the most recent AI message. Prepend your response with FINAL ANSWER"
-    elif state['messages'][-1].name == 'Summarizer':
-        prompt = "Please utilize the output of the summary to inform your analysis of the original code sample. Evaluate it for any vulnerabilities you can find while avoiding false positives. If no true positive vulnerabilities are found respond NONE."
+    results = state['messages'][-1].dict().get('content', '')
+    if state['sender'] == 'Sast_runner':
+        prompt = f"Please summarize the following static analysis results: {results}."
+        target = 'Summarizer'
+    elif state['sender'] == 'Analyzer':
+        last_msg = state['messages'][-1].dict().get('content', '')
+        if 'QNA:' in last_msg:
+            loc = last_msg.find('QNA:')
+            prompt = last_msg[loc:]
+            target = 'Rag_subgraph'
+        else:
+            prompt = ("Prepend your response with FINAL ANSWER."
+                    " Please summarize the following results:"
+                    f" {results}"
+            )
+            target = 'Summarizer'
+    elif state['sender'] == 'Summarizer':
+        prompt = ("Please utilize the output of the summary to inform your analysis of the original code sample."
+                  " Evaluate it for any vulnerabilities you can find while avoiding false positives."
+                  " Intensively review all detections, reasoning through to ensure they are accurate."
+                  " If no true positive vulnerabilities are found respond NONE."
+                  " You have access to a peer RAG agent. If you would like more basic information on a vulnerability,"
+                  " respond with 'QNA:', then your list of questions."
+        )
+        target = 'Analyzer'
+    elif state['sender'] == 'Rag_subgraph':
+        prompt = f'The answers to your questions are as follows: {results}'
+        target = 'Analyzer'
     msg = HumanMessage(prompt, name='Prompter_node')
     return {
         "messages": [msg],
-        "sender": 'fake_user',
+        "sender": 'Prompter_node',
+        "target": target
     }
 
 # Helper function to create a node for a given agent
 def agent_node(state, agent, name):
-    # if state.get('humanNext',0):
-    #     msg_type = HumanMessage
-    #     nextType = 0
-    # else:
-    #     msg_type = AIMessage
-    #     nextType = 1
-
-
     result = agent.invoke(state)
     result = result.dict(exclude={"type", "name"})
     # We convert the agent output into a format that is suitable to append to the global state
@@ -190,10 +217,8 @@ def agent_node(state, agent, name):
         # pass
     return {
         "messages": [result],
-        # Since we have a strict workflow, we can
-        # track the sender so we know who to pass to next.
         "sender": name,
-        # "humanNext": nextType
+        "target": "Prompter_node"
     }
 
 sast_node = functools.partial(agent_node, agent=sast_agent, name="Sast_runner")
@@ -209,35 +234,41 @@ def router(state):
     messages = state["messages"]
     last_message = messages[-1].dict()
 
-    print('IN ROUTER FOR:', last_message.get('name'))
+    print('IN ROUTER FOR:', last_message.get('name', ''))
+    # print(state)
 
     if last_message.get('tool_calls',0):
         # The previous agent is invoking a tool
+        state['target'] = 'tool'
         return "call_tool"
+    
     if "FINAL ANSWER" in last_message.get('content','') and last_message.get('name','') == 'Summarizer':
         # End of workflow
+        state['target'] = 'END'
         return END
     
-    if last_message.get('name','') == 'Prompter_node':
-        m2 = messages[-2].dict().get('name','')
-        if m2 == 'Summarizer':
+    if state['sender'] == 'Prompter_node':
+        if state['target'] == 'Analyzer':
             return "goAnalyze"
+        elif state['target'] == 'Rag_subgraph':
+            return "goRag"
         else:
             return "goSummarize"
 
-    
     return "continue"
 
 # !!!!!!!!!!!!! DEFINE THE GRAPH !!!!!!!!!!!!!
 
 workflow = StateGraph(AgentState)
 
+workflow.add_node("Rag_subgraph", call_rag)
 workflow.add_node("Prompter_node", human_feedback)
 workflow.add_node("Sast_runner", sast_node)
 workflow.add_node("Summarizer", summarize_node)
 # workflow.add_node("Supervisor", supervisor_node)
 workflow.add_node("Analyzer", analyze_node)
 workflow.add_node("call_tool", tool_node)
+
 
 workflow.add_conditional_edges(
     "Sast_runner",
@@ -255,9 +286,14 @@ workflow.add_conditional_edges(
     {"continue": "Prompter_node"},
 )
 workflow.add_conditional_edges(
+    "Rag_subgraph",
+    router,
+    {"continue":"Prompter_node"}
+)
+workflow.add_conditional_edges(
     "Prompter_node",
     router,
-    {"goSummarize": "Summarizer", "goAnalyze": "Analyzer"},
+    {"goSummarize": "Summarizer", "goAnalyze": "Analyzer", "goRag":"Rag_subgraph"},
 )
 
 workflow.add_conditional_edges(

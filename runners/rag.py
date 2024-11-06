@@ -21,7 +21,6 @@ from langgraph.graph import START, END, StateGraph
 # Custom
 from cwe_parser import load_cwe_from_xml
 
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # LOGIN
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -221,6 +220,7 @@ class GraphState(TypedDict):
     question: str
     generation: str
     documents: List[str]
+    recursion: int
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEFINE NODES
@@ -236,6 +236,7 @@ def retrieve(state):
     Returns:
         state (dict): New key added to state, documents, that contains retrieved documents
     """
+
     print("---RETRIEVE---")
     question = state["question"]
 
@@ -254,6 +255,7 @@ def generate(state):
     Returns:
         state (dict): New key added to state, generation, that contains LLM generation
     """
+
     print("---GENERATE---")
     question = state["question"]
     documents = state["documents"]
@@ -328,6 +330,9 @@ def decide_to_generate(state):
         str: Binary decision for next node to call
     """
 
+    if past_recursion(state):
+        return 'exit'
+
     print("---ASSESS GRADED DOCUMENTS---")
     state["question"]
     filtered_documents = state["documents"]
@@ -338,10 +343,12 @@ def decide_to_generate(state):
         print(
             "---DECISION: ALL DOCUMENTS ARE NOT RELEVANT TO QUESTION, TRANSFORM QUERY---"
         )
+        state['recursion'] = state.get('recursion', 0) + 1
         return "transform_query"
     else:
         # We have relevant documents, so generate answer
         print("---DECISION: GENERATE---")
+        state['recursion'] = 0
         return "generate"
 
 
@@ -355,6 +362,9 @@ def grade_generation_v_documents_and_question(state):
     Returns:
         str: Decision for next node to call
     """
+
+    if past_recursion(state):
+        return 'exit'
 
     print("---CHECK HALLUCINATIONS---")
     question = state["question"]
@@ -375,13 +385,25 @@ def grade_generation_v_documents_and_question(state):
         grade = score.binary_score
         if grade == "yes":
             print("---DECISION: GENERATION ADDRESSES QUESTION---")
+            state['recursion'] = 0
             return "useful"
         else:
             print("---DECISION: GENERATION DOES NOT ADDRESS QUESTION---")
+            state['recursion'] = state.get('recursion', 0) + 1
             return "not useful"
     else:
         pprint("---DECISION: GENERATION IS NOT GROUNDED IN DOCUMENTS, RE-TRY---")
+        state['recursion'] = state.get('recursion', 0) + 1
         return "not supported"
+    
+def past_recursion(state):
+    if state.get('recursion',0) > int(os.getenv('RAG_RECURSION_LIMIT')):
+        pprint("---RECURSION LIMIT REACHED, EXITING RAG---")
+        state['generation'] = 'Exceeded recursion limit, could not complete task as requested.'
+        return True
+    else:
+        return False
+
     
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEFINE GRAPH
@@ -404,6 +426,7 @@ workflow.add_conditional_edges(
     {
         "transform_query": "transform_query",
         "generate": "generate",
+        "exit":END,
     },
 )
 workflow.add_edge("transform_query", "retrieve")
@@ -414,39 +437,41 @@ workflow.add_conditional_edges(
         "not supported": "generate",
         "useful": END,
         "not useful": "transform_query",
+        "exit":END,
     },
 )
 
 # Compile
-app = workflow.compile()
+rag_graph = workflow.compile()
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # GRAPH VIEWER
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-try:
-    # Get the PNG image as bytes
-    img_data = app.get_graph().draw_mermaid_png()  # Image data in bytes
+# try:
+#     # Get the PNG image as bytes
+#     img_data = rag_graph.get_graph().draw_mermaid_png()  # Image data in bytes
 
-    # Use BytesIO to open the image directly from bytes
-    img = Image.open(io.BytesIO(img_data))
-    img.show()  # This opens the image with the default viewer without saving it to disk
-    img.save('./misc/TOOLRAG_LangGraph_Img.png')
-except Exception as e:
-    print(f"Error displaying image: {e}")
+#     # Use BytesIO to open the image directly from bytes
+#     img = Image.open(io.BytesIO(img_data))
+#     img.show()  # This opens the image with the default viewer without saving it to disk
+#     img.save('./misc/TOOLRAG_LangGraph_Img.png')
+# except Exception as e:
+#     print(f"Error displaying image: {e}")
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # RUN PROCESS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-inputs = {"question": "Tell me how to avoid my cookies being open to client-side scripts?"}
-for output in app.stream(inputs):
-    for key, value in output.items():
-        # Node
-        pprint(f"Node '{key}':")
-        # Optional: print full state at each node
-        # pprint(value, indent=2, width=80, depth=None)
-    pprint("\n---\n")
+# inputs = {"question": "Tell me how to avoid my cookies being open to client-side scripts?"}
+# for output in rag_graph.stream(inputs):
+#     for key, value in output.items():
+#         # Node
+#         pprint(f"Node '{key}':")
+#         # Optional: print full state at each node
+#         # pprint(value, indent=2, width=80, depth=None)
+#     pprint("\n---\n")
 
-# Final generation
-pprint(value["generation"])
+# # # Final generation
+# pprint(key)
+# pprint(value["generation"])

@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Custom
-from runners.dataset_parsers import *
+from dataset_parsers import *
 from prompts import *
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!
