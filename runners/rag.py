@@ -21,6 +21,9 @@ from langgraph.graph import START, END, StateGraph
 # Custom
 from cwe_parser import load_cwe_from_xml
 
+# Self-RAG
+# https://langchain-ai.github.io/langgraph/tutorials/rag/langgraph_self_rag/
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # LOGIN
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -83,9 +86,10 @@ retriever = vectorstore.as_retriever()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # LLM
-llm = ChatAnthropic(
-    model="claude-3-haiku-20240307", temperature=0
-)
+if os.getenv('MODEL_SRC'):
+    llm = ChatAnthropic(
+        model=os.getenv('ANTHROPIC_RAG_MODEL'), temperature=0
+    )
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # RETRIEVAL GRADER
@@ -221,6 +225,7 @@ class GraphState(TypedDict):
     generation: str
     documents: List[str]
     recursion: int
+    sender: str
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEFINE NODES
@@ -238,11 +243,21 @@ def retrieve(state):
     """
 
     print("---RETRIEVE---")
+    generation = ""
+    recursion = state.get('recursion',0)
+    sender = state.get('sender','NA')
+    print("STATE_REC:", recursion)
+    print("STATE_SEN:", sender)
+    if sender == 'NA':
+        recursion = 0
+    else:
+        recursion += 1
+    
     question = state["question"]
 
     # Retrieval
     documents = retriever.invoke(question)
-    return {"documents": documents, "question": question}
+    return {"question": question, "generation": generation, "documents": documents, "recursion":recursion, "sender":"retrieve"}
 
 
 def generate(state):
@@ -257,12 +272,20 @@ def generate(state):
     """
 
     print("---GENERATE---")
+    generation = ""
+    recursion = state.get('recursion',0)
+    sender = state.get('sender','NA')
+    print("STATE_REC:", recursion)
+    print("STATE_SEN:", sender)
+    if sender != 'grade_documents':
+        recursion += 1
+    
     question = state["question"]
     documents = state["documents"]
 
     # RAG generation
     generation = rag_chain.invoke({"context": documents, "question": question})
-    return {"documents": documents, "question": question, "generation": generation}
+    return {"question": question, "generation": generation, "documents": documents, "recursion":recursion, "sender":"generate"}
 
 
 def grade_documents(state):
@@ -277,6 +300,9 @@ def grade_documents(state):
     """
 
     print("---CHECK DOCUMENT RELEVANCE TO QUESTION---")
+    generation = ""
+    recursion = state.get('recursion',0)
+
     question = state["question"]
     documents = state["documents"]
 
@@ -293,7 +319,8 @@ def grade_documents(state):
         else:
             print("---GRADE: DOCUMENT NOT RELEVANT---")
             continue
-    return {"documents": filtered_docs, "question": question}
+    # return {"documents": filtered_docs, "question": question}
+    return {"question": question, "generation": generation, "documents": filtered_docs, "recursion":recursion, "sender":"grade_documents"}
 
 
 def transform_query(state):
@@ -308,12 +335,16 @@ def transform_query(state):
     """
 
     print("---TRANSFORM QUERY---")
+    generation = ""
+    recursion = state.get('recursion',0)
+
     question = state["question"]
     documents = state["documents"]
 
     # Re-write question
     better_question = question_rewriter.invoke({"question": question})
-    return {"documents": documents, "question": better_question}
+    # return {"documents": documents, "question": better_question}
+    return {"question": better_question, "generation": generation, "documents": documents, "recursion":recursion, "sender":"transform_query"}
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEFINE EDGE LOGIC
@@ -330,10 +361,12 @@ def decide_to_generate(state):
         str: Binary decision for next node to call
     """
 
-    if past_recursion(state):
-        return 'exit'
-
     print("---ASSESS GRADED DOCUMENTS---")
+    recursion = state.get('recursion','0')
+    print("STATE_REC:", recursion)
+    if past_recursion(recursion):
+        return "exceeded_limit"
+
     state["question"]
     filtered_documents = state["documents"]
 
@@ -343,12 +376,10 @@ def decide_to_generate(state):
         print(
             "---DECISION: ALL DOCUMENTS ARE NOT RELEVANT TO QUESTION, TRANSFORM QUERY---"
         )
-        state['recursion'] = state.get('recursion', 0) + 1
         return "transform_query"
     else:
         # We have relevant documents, so generate answer
         print("---DECISION: GENERATE---")
-        state['recursion'] = 0
         return "generate"
 
 
@@ -363,10 +394,12 @@ def grade_generation_v_documents_and_question(state):
         str: Decision for next node to call
     """
 
-    if past_recursion(state):
-        return 'exit'
-
     print("---CHECK HALLUCINATIONS---")
+    recursion = state.get('recursion','0')
+    print("STATE_REC:", recursion)
+    if past_recursion(recursion):
+        return "exceeded_limit"
+    
     question = state["question"]
     documents = state["documents"]
     generation = state["generation"]
@@ -385,24 +418,25 @@ def grade_generation_v_documents_and_question(state):
         grade = score.binary_score
         if grade == "yes":
             print("---DECISION: GENERATION ADDRESSES QUESTION---")
-            state['recursion'] = 0
             return "useful"
         else:
             print("---DECISION: GENERATION DOES NOT ADDRESS QUESTION---")
-            state['recursion'] = state.get('recursion', 0) + 1
             return "not useful"
     else:
         pprint("---DECISION: GENERATION IS NOT GROUNDED IN DOCUMENTS, RE-TRY---")
-        state['recursion'] = state.get('recursion', 0) + 1
         return "not supported"
     
-def past_recursion(state):
-    if state.get('recursion',0) > int(os.getenv('RAG_RECURSION_LIMIT')):
+def past_recursion(recursion):
+    print("RECURSION:", recursion, 'vs', int(os.getenv('RAG_RECURSION_LIMIT')))
+    if recursion > int(os.getenv('RAG_RECURSION_LIMIT')):
         pprint("---RECURSION LIMIT REACHED, EXITING RAG---")
-        state['generation'] = 'Exceeded recursion limit, could not complete task as requested.'
         return True
     else:
         return False
+    
+def limit_returner(state):
+    generation = 'Exceeded recursion limit, could not complete the task as requested.'
+    return {"generation": generation, "sender":"limit_returner"}
 
     
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -416,6 +450,7 @@ workflow.add_node("retrieve", retrieve)  # retrieve
 workflow.add_node("grade_documents", grade_documents)  # grade documents
 workflow.add_node("generate", generate)  # generatae
 workflow.add_node("transform_query", transform_query)  # transform_query
+workflow.add_node("limit_node", limit_returner)
 
 # Build graph
 workflow.add_edge(START, "retrieve")
@@ -426,7 +461,7 @@ workflow.add_conditional_edges(
     {
         "transform_query": "transform_query",
         "generate": "generate",
-        "exit":END,
+        "exceeded_limit": "limit_node"
     },
 )
 workflow.add_edge("transform_query", "retrieve")
@@ -437,9 +472,11 @@ workflow.add_conditional_edges(
         "not supported": "generate",
         "useful": END,
         "not useful": "transform_query",
-        "exit":END,
+        "exceeded_limit": "limit_node"
     },
 )
+
+workflow.add_edge("limit_node", END)
 
 # Compile
 rag_graph = workflow.compile()
@@ -448,16 +485,16 @@ rag_graph = workflow.compile()
 # GRAPH VIEWER
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# try:
-#     # Get the PNG image as bytes
-#     img_data = rag_graph.get_graph().draw_mermaid_png()  # Image data in bytes
+try:
+    # Get the PNG image as bytes
+    img_data = rag_graph.get_graph().draw_mermaid_png()  # Image data in bytes
 
-#     # Use BytesIO to open the image directly from bytes
-#     img = Image.open(io.BytesIO(img_data))
-#     img.show()  # This opens the image with the default viewer without saving it to disk
-#     img.save('./misc/TOOLRAG_LangGraph_Img.png')
-# except Exception as e:
-#     print(f"Error displaying image: {e}")
+    # Use BytesIO to open the image directly from bytes
+    img = Image.open(io.BytesIO(img_data))
+    img.show()  # This opens the image with the default viewer without saving it to disk
+    img.save('./misc/TOOLRAG_RAGGraph_Img.png')
+except Exception as e:
+    print(f"Error displaying image: {e}")
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # RUN PROCESS

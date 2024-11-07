@@ -63,36 +63,31 @@ def run_semgrep(code_sample: str, file_suffix: str) -> str:
     """Call to run the Semgrep static analysis tool."""
     return go_semgrep(code_sample, file_suffix)
 
-# tools = [run_flawfinder, run_cppcheck, run_appinspector, run_semgrep]
-sast_tools = [run_flawfinder]
-other_tools = [dummy_tool]
-tool_node = ToolNode(sast_tools+other_tools)
+sast_tools = [run_flawfinder, run_cppcheck, run_appinspector, run_semgrep]
+fake_tools = [dummy_tool]
+tool_node = ToolNode(sast_tools+fake_tools)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # MODELS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Supervisor Model: claude-3-sonnet-20240229
 # Analysis model: claude-3-5-sonnet-20241022 OR claude-3-opus-20240229
-# Tool Model: claude-3-haiku-20240307
+# SAST Model: claude-3-haiku-20240307
 # Summarize Model: claude-3-haiku-20240307 OR claude-3-sonnet-20240229
-# RAG Model: ?
+# RAG Model: claude-3-haiku-20240307
 
-sast_model = ChatAnthropic(
-    model="claude-3-haiku-20240307", temperature=0
-)#.bind_tools(tools)
+if os.getenv('MODEL_SRC'):
+    sast_model = ChatAnthropic(
+        model=os.getenv('ANTHROPIC_SAST_MODEL'), temperature=0
+    )
 
-summarize_model = ChatAnthropic(
-    model="claude-3-sonnet-20240229", temperature=0
-)
+    summarize_model = ChatAnthropic(
+        model=os.getenv('ANTHROPIC_SUMMARIZE_MODEL'), temperature=0
+    )
 
-# supervisor_model = ChatAnthropic(
-#     model="claude-3-haiku-20240307", temperature=0
-# )
-
-analysis_model = ChatAnthropic(
-    model="claude-3-5-sonnet-20241022", temperature=0
-)
+    analysis_model = ChatAnthropic(
+        model=os.getenv('ANTHROPIC_ANALYSIS_MODEL'), temperature=0
+    )
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ReAct AGENTS LANGGRAPH
@@ -128,19 +123,13 @@ sast_agent = create_agent(
 
 summarize_agent = create_agent(
     summarize_model,
-    other_tools,
+    fake_tools,
     system_message="You should provide accurate summarizations of previously generated information for all other models to use.",
 )
 
-# supervisor_agent = create_agent(
-#     supervisor_model,
-#     [],
-#     system_message="???",
-# )
-
 analyze_agent = create_agent(
     analysis_model,
-    other_tools,
+    fake_tools,
     system_message="You should use the provided information to detect all potential vulnerabilties in the originally presented code sample. You may request additional information. You should avoid false positives and false negatives."
 )
 
@@ -170,7 +159,9 @@ def call_rag(state):
 def human_feedback(state):
     results = state['messages'][-1].dict().get('content', '')
     if state['sender'] == 'Sast_runner':
-        prompt = f"Please summarize the following static analysis results: {results}."
+        prompt = ("Please summarize all of the static analysis results from all of the previous tool runs."
+                  " Indicate which tools you are summarizing in your response."
+        )
         target = 'Summarizer'
     elif state['sender'] == 'Analyzer':
         last_msg = state['messages'][-1].dict().get('content', '')
@@ -179,7 +170,9 @@ def human_feedback(state):
             prompt = last_msg[loc:]
             target = 'Rag_subgraph'
         else:
-            prompt = ("Prepend your response with FINAL ANSWER."
+            prompt = ("Prepend your response with FINAL ANSWER. Follow this with VULNERABLE or SAFE depending on the results."
+                    " Immediately after, include a CONFIDENCE SCORE, with a score describing your certainty regarding"
+                    " your analysis on a scale from 0 to 10."
                     " Please summarize the following results:"
                     f" {results}"
             )
@@ -190,7 +183,9 @@ def human_feedback(state):
                   " Intensively review all detections, reasoning through to ensure they are accurate."
                   " If no true positive vulnerabilities are found respond NONE."
                   " You have access to a peer RAG agent. If you would like more basic information on a vulnerability,"
-                  " respond with 'QNA:', then your list of questions."
+                  " respond with 'QNA:', then your list of questions. Keep your question as simple as possible, as"
+                  " you are querying the Common Weakness Enumeration database. An example request would be to provide"
+                  " a description or example of a specific type of vulnerability."
         )
         target = 'Analyzer'
     elif state['sender'] == 'Rag_subgraph':
@@ -223,7 +218,6 @@ def agent_node(state, agent, name):
 
 sast_node = functools.partial(agent_node, agent=sast_agent, name="Sast_runner")
 summarize_node = functools.partial(agent_node, agent=summarize_agent, name="Summarizer")
-# supervisor_node = functools.partial(agent_node, agent=supervisor_agent, name="Supervisor")
 analyze_node = functools.partial(agent_node, agent=analyze_agent, name="Analyzer")
 
 # !!!!!!!!!!!!! DEFINE EDGE LOGIC !!!!!!!!!!!!!
@@ -239,12 +233,10 @@ def router(state):
 
     if last_message.get('tool_calls',0):
         # The previous agent is invoking a tool
-        state['target'] = 'tool'
         return "call_tool"
     
     if "FINAL ANSWER" in last_message.get('content','') and last_message.get('name','') == 'Summarizer':
         # End of workflow
-        state['target'] = 'END'
         return END
     
     if state['sender'] == 'Prompter_node':
@@ -265,7 +257,6 @@ workflow.add_node("Rag_subgraph", call_rag)
 workflow.add_node("Prompter_node", human_feedback)
 workflow.add_node("Sast_runner", sast_node)
 workflow.add_node("Summarizer", summarize_node)
-# workflow.add_node("Supervisor", supervisor_node)
 workflow.add_node("Analyzer", analyze_node)
 workflow.add_node("call_tool", tool_node)
 
@@ -316,12 +307,12 @@ graph = workflow.compile()
 
 try:
     # Get the PNG image as bytes
-    img_data = graph.get_graph().draw_mermaid_png()  # Image data in bytes
+    img_data = graph.get_graph(xray=True).draw_mermaid_png()  # Image data in bytes
 
     # Use BytesIO to open the image directly from bytes
     img = Image.open(io.BytesIO(img_data))
     img.show()  # This opens the image with the default viewer without saving it to disk
-    img.save('./misc/TOOLRAG_LangGraph_Img.png')
+    img.save('./misc/TOOLRAG_RUNGraph_Img.png')
 except Exception as e:
     print(f"Error displaying image: {e}")
 
@@ -366,6 +357,44 @@ for msgs in convos:
         {"recursion_limit": 150},
         stream_mode='debug'
     )
+    
+    directory_path = os.getenv('OUTPUT_PTH')
+    num_items = len(os.listdir(directory_path+'/full'))
+    f =  open(f"{directory_path}/full/run_{num_items}_full.txt","a+", encoding="utf-8", errors="replace")
+    f2 = open(f"{directory_path}/short/run_{num_items}_short.txt", "a+", encoding="utf-8", errors="replace")
+    
+    writeFirstEvent = True
+    second_to_last_event = None
+    last_event = None
+    
     for s in events:
         print(s)
         print("----")
+        f.write(str(s))
+        f.write("\n----\n")
+
+        if writeFirstEvent:
+            f2.write("-"*50 + "\nINPUT\n" + "-"*50 + "\n")
+            f2.write(s['payload']['input']['messages'][0][1])
+            writeFirstEvent = False
+
+        second_to_last_event = last_event  # Update second-to-last to the previous last
+        last_event = s 
+
+    print(second_to_last_event['payload']['input']['messages'][-2].dict())
+    print(last_event['payload']['result'][0][1][0].dict())
+    f2.write("\n"+"-"*50 + "\nANALYZER OUTPUT\n" + "-"*50 + "\n")
+    f2.write(second_to_last_event['payload']['input']['messages'][-2].dict().get('content',''))
+    f2.write("\n"+"-"*50 + "\nFINAL SUMMARY OUTPUT\n" + "-"*50 + "\n")
+    f2.write(last_event['payload']['result'][0][1][0].dict().get('content',''))
+
+    f.close()
+    f2.close()
+
+    # with open(f"{directory_path}/short/run_{num_items}_short.txt","a+", encoding="utf-8", errors="replace") as f2:
+    #     f2.write("-"*50 + "\nINPUT\n" + "-"*50 + "\n")
+    #     f2.write(events[0]['payload']['inputs']['messages'][0][1])
+    #     f2.write("-"*50 + "\nANALYZER OUTPUT\n" + "-"*50 + "\n")
+    #     f2.write(events[-2]['payload']['input']['messages'][-2]['content'])
+    #     f2.write("-"*50 + "\nFINAL SUMMARY OUTPUT\n" + "-"*50 + "\n")
+    #     f2.write(events[-1]['payload']['result'][0][1][0]['content'])
