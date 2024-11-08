@@ -12,3 +12,4 @@
 - [ ] Confirm summarizer actually SUMMARIZES tool outputs
 - [ ] What things should I pass directly, versus instruct/provide using state history context?
 - [ ] Should different RAG steps use different models?
+- [ ] Docker pre-check script to avoid mount directory already exists error

@@ -125,9 +125,9 @@ def go_semgrep(code_sample: str, file_suffix: str) -> str:
         # Run semgrep on the temporary file, capturing the output
         result = subprocess.run(
             # Submit Scan Online too, use online ruleset
-            # ["docker", "run", "-e", "SEMGREP_APP_TOKEN=e15c0a35ea4e33b27a298fa14a1ca193cad729702f5c68c72451f2a832acab32", "--rm", "-v", "D:/grad_research_2:/src", "semgrep/semgrep", "semgrep", "ci", "--quiet", "--subdir", "datasets/tst"],
+            # ["docker", "run", "-e", f"SEMGREP_APP_TOKEN={os.getenv('SEMGREP_APP_TOKEN')}", "--rm", "-v", "D:/grad_research_2:/src", "semgrep/semgrep", "semgrep", "ci", "--quiet", "--subdir", "datasets/tst"],
             # Local only, use local ruleset (?)
-            ["docker", "run", "-e", "SEMGREP_APP_TOKEN=e15c0a35ea4e33b27a298fa14a1ca193cad729702f5c68c72451f2a832acab32", "--rm", "-v", "D:/grad_research_2:/src", "semgrep/semgrep", "semgrep", "scan", "--config=r/all", "--quiet", "datasets/tst"],
+            ["docker", "run", "-e", f"SEMGREP_APP_TOKEN={os.getenv('SEMGREP_APP_TOKEN')}", "--rm", "-v", "D:/grad_research_2:/src", "semgrep/semgrep", "semgrep", "scan", "--config=r/all", "--quiet", "datasets/tst"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -179,5 +179,5 @@ def go_semgrep(code_sample: str, file_suffix: str) -> str:
 # print(go_semgrep(test_code_snip,'.cpp'))
 
 # docker run --rm -it -v D:\grad_research_2\datasets\test:/tmp -v $(pwd):/app:rw -w /app -t ghcr.io/joernio/joern joern
-# docker run -e SEMGREP_APP_TOKEN=e15c0a35ea4e33b27a298fa14a1ca193cad729702f5c68c72451f2a832acab32 --rm -v "D:/grad_research_2:/src" semgrep/semgrep semgrep ci --subdir datasets/tst
-# docker run -e SEMGREP_APP_TOKEN=e15c0a35ea4e33b27a298fa14a1ca193cad729702f5c68c72451f2a832acab32 --rm -v "D:/grad_research_2:/src" semgrep/semgrep semgrep scan --config=r/all --quiet datasets/tst
+# docker run -e SEMGREP_APP_TOKEN= --rm -v "D:/grad_research_2:/src" semgrep/semgrep semgrep ci --subdir datasets/tst
+# docker run -e SEMGREP_APP_TOKEN= --rm -v "D:/grad_research_2:/src" semgrep/semgrep semgrep scan --config=r/all --quiet datasets/tst

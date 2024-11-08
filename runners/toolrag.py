@@ -305,16 +305,16 @@ graph = workflow.compile()
 # ReAct AGENTS GRAPH VIEWER
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-try:
-    # Get the PNG image as bytes
-    img_data = graph.get_graph(xray=True).draw_mermaid_png()  # Image data in bytes
+# try:
+#     # Get the PNG image as bytes
+#     img_data = graph.get_graph(xray=True).draw_mermaid_png()  # Image data in bytes
 
-    # Use BytesIO to open the image directly from bytes
-    img = Image.open(io.BytesIO(img_data))
-    img.show()  # This opens the image with the default viewer without saving it to disk
-    img.save('./misc/TOOLRAG_RUNGraph_Img.png')
-except Exception as e:
-    print(f"Error displaying image: {e}")
+#     # Use BytesIO to open the image directly from bytes
+#     img = Image.open(io.BytesIO(img_data))
+#     img.show()  # This opens the image with the default viewer without saving it to disk
+#     img.save('./misc/TOOLRAG_RUNGraph_Img.png')
+# except Exception as e:
+#     print(f"Error displaying image: {e}")
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # PROMPTS
@@ -361,9 +361,7 @@ for msgs in convos:
     directory_path = os.getenv('OUTPUT_PTH')
     num_items = len(os.listdir(directory_path+'/full'))
     f =  open(f"{directory_path}/full/run_{num_items}_full.txt","a+", encoding="utf-8", errors="replace")
-    f2 = open(f"{directory_path}/short/run_{num_items}_short.txt", "a+", encoding="utf-8", errors="replace")
     
-    writeFirstEvent = True
     second_to_last_event = None
     last_event = None
     
@@ -373,28 +371,32 @@ for msgs in convos:
         f.write(str(s))
         f.write("\n----\n")
 
-        if writeFirstEvent:
-            f2.write("-"*50 + "\nINPUT\n" + "-"*50 + "\n")
-            f2.write(s['payload']['input']['messages'][0][1])
-            writeFirstEvent = False
-
         second_to_last_event = last_event  # Update second-to-last to the previous last
         last_event = s 
-
-    print(second_to_last_event['payload']['input']['messages'][-2].dict())
-    print(last_event['payload']['result'][0][1][0].dict())
-    f2.write("\n"+"-"*50 + "\nANALYZER OUTPUT\n" + "-"*50 + "\n")
-    f2.write(second_to_last_event['payload']['input']['messages'][-2].dict().get('content',''))
-    f2.write("\n"+"-"*50 + "\nFINAL SUMMARY OUTPUT\n" + "-"*50 + "\n")
-    f2.write(last_event['payload']['result'][0][1][0].dict().get('content',''))
-
     f.close()
-    f2.close()
 
-    # with open(f"{directory_path}/short/run_{num_items}_short.txt","a+", encoding="utf-8", errors="replace") as f2:
-    #     f2.write("-"*50 + "\nINPUT\n" + "-"*50 + "\n")
-    #     f2.write(events[0]['payload']['inputs']['messages'][0][1])
-    #     f2.write("-"*50 + "\nANALYZER OUTPUT\n" + "-"*50 + "\n")
-    #     f2.write(events[-2]['payload']['input']['messages'][-2]['content'])
-    #     f2.write("-"*50 + "\nFINAL SUMMARY OUTPUT\n" + "-"*50 + "\n")
-    #     f2.write(events[-1]['payload']['result'][0][1][0]['content'])
+    with open(f"{directory_path}/parsed/run_{num_items}_parsed.txt", "a+", encoding="utf-8", errors="replace") as f2:
+        # f2.write("\n"+"-"*50 + "\nANALYZER OUTPUT\n" + "-"*50 + "\n")
+        # f2.write(second_to_last_event['payload']['input']['messages'][-2].dict().get('content',''))
+        # f2.write("\n"+"-"*50 + "\nFINAL SUMMARY OUTPUT\n" + "-"*50 + "\n")
+        # f2.write(last_event['payload']['result'][0][1][0].dict().get('content',''))
+
+        isFirst = True
+        for msg in second_to_last_event['payload']['input']['messages']:
+            if isFirst:
+                f2.write("-"*50 + "\nINPUT\n" + "-"*50 + "\n")
+                f2.write(msg[1])
+                f2.write("\n")
+                isFirst = False
+                continue
+
+            msg_dict = msg.dict()
+
+            if msg_dict['response_metadata'].get('stop_reason','') != 'tool_use':
+                f2.write("\n" + "-"*50 + f"\n{msg_dict['name']}\n" + "-"*50 + "\n")
+                f2.write(msg_dict['content'])
+                f2.write("\n")
+                continue
+        
+        f2.write("\n"+"-"*50 + "\nFINAL SUMMARY OUTPUT\n" + "-"*50 + "\n")
+        f2.write(last_event['payload']['result'][0][1][0].dict().get('content',''))

@@ -485,30 +485,31 @@ rag_graph = workflow.compile()
 # GRAPH VIEWER
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-try:
-    # Get the PNG image as bytes
-    img_data = rag_graph.get_graph().draw_mermaid_png()  # Image data in bytes
+# try:
+#     # Get the PNG image as bytes
+#     img_data = rag_graph.get_graph().draw_mermaid_png()  # Image data in bytes
 
-    # Use BytesIO to open the image directly from bytes
-    img = Image.open(io.BytesIO(img_data))
-    img.show()  # This opens the image with the default viewer without saving it to disk
-    img.save('./misc/TOOLRAG_RAGGraph_Img.png')
-except Exception as e:
-    print(f"Error displaying image: {e}")
+#     # Use BytesIO to open the image directly from bytes
+#     img = Image.open(io.BytesIO(img_data))
+#     img.show()  # This opens the image with the default viewer without saving it to disk
+#     img.save('./misc/TOOLRAG_RAGGraph_Img.png')
+# except Exception as e:
+#     print(f"Error displaying image: {e}")
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # RUN PROCESS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # inputs = {"question": "Tell me how to avoid my cookies being open to client-side scripts?"}
+# inputs = {"question": "What is CWE-288??"}
 # for output in rag_graph.stream(inputs):
 #     for key, value in output.items():
 #         # Node
 #         pprint(f"Node '{key}':")
 #         # Optional: print full state at each node
-#         # pprint(value, indent=2, width=80, depth=None)
+#         pprint(value, indent=2, width=80, depth=None)
 #     pprint("\n---\n")
 
-# # # Final generation
+# # Final generation
 # pprint(key)
 # pprint(value["generation"])
