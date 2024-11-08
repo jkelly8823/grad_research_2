@@ -174,7 +174,7 @@ def human_feedback(state):
                     " Immediately after, include a CONFIDENCE SCORE, with a score describing your certainty regarding"
                     " your analysis on a scale from 0 to 10."
                     " Please summarize the following results:"
-                    f" {results}"
+                    f"\n{results}"
             )
             target = 'Summarizer'
     elif state['sender'] == 'Summarizer':
@@ -183,13 +183,14 @@ def human_feedback(state):
                   " Intensively review all detections, reasoning through to ensure they are accurate."
                   " If no true positive vulnerabilities are found respond NONE."
                   " You have access to a peer RAG agent. If you would like more basic information on a vulnerability,"
-                  " respond with 'QNA:', then your list of questions. Keep your question as simple as possible, as"
-                  " you are querying the Common Weakness Enumeration database. An example request would be to provide"
-                  " a description or example of a specific type of vulnerability."
+                  " then at the end of your response, respond with 'QNA:', then your list of questions. Your questions"
+                  " should be at the very end of your message. Keep your questions as simple as possible, as you are"
+                  " querying the Common Weakness Enumeration database. An example request would be to provide a" 
+                  " description or example of a specific type of vulnerability."
         )
         target = 'Analyzer'
     elif state['sender'] == 'Rag_subgraph':
-        prompt = f'The answers to your questions are as follows: {results}'
+        prompt = f'The answers to your questions are as follows:\n{results}'
         target = 'Analyzer'
     msg = HumanMessage(prompt, name='Prompter_node')
     return {
@@ -320,7 +321,7 @@ graph = workflow.compile()
 # PROMPTS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-samples, convos = form_prompts('BRYSON',SAST_PROMPT, 1)
+samples, convos = form_prompts('BRYSON',SAST_PROMPT, 2)
 convos = truncate_tokens_from_messages(convos, "claude-3-haiku-20240307", 2048)
 # print(convos)
 
