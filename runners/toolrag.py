@@ -321,7 +321,7 @@ graph = workflow.compile()
 # PROMPTS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-samples, convos = form_prompts('BRYSON',SAST_PROMPT, 2)
+samples, convos = form_prompts('PRIMEVUL',SAST_PROMPT, 1)
 convos = truncate_tokens_from_messages(convos, "claude-3-haiku-20240307", 2048)
 # print(convos)
 
@@ -377,27 +377,19 @@ for msgs in convos:
     f.close()
 
     with open(f"{directory_path}/parsed/run_{num_items}_parsed.txt", "a+", encoding="utf-8", errors="replace") as f2:
-        # f2.write("\n"+"-"*50 + "\nANALYZER OUTPUT\n" + "-"*50 + "\n")
-        # f2.write(second_to_last_event['payload']['input']['messages'][-2].dict().get('content',''))
-        # f2.write("\n"+"-"*50 + "\nFINAL SUMMARY OUTPUT\n" + "-"*50 + "\n")
-        # f2.write(last_event['payload']['result'][0][1][0].dict().get('content',''))
-
         isFirst = True
-        for msg in second_to_last_event['payload']['input']['messages']:
-            if isFirst:
-                f2.write("-"*50 + "\nINPUT\n" + "-"*50 + "\n")
-                f2.write(msg[1])
-                f2.write("\n")
-                isFirst = False
-                continue
-
+        for msg in second_to_last_event['payload']['input']['messages']:            
             msg_dict = msg.dict()
 
             if msg_dict['response_metadata'].get('stop_reason','') != 'tool_use':
-                f2.write("\n" + "-"*50 + f"\n{msg_dict['name']}\n" + "-"*50 + "\n")
-                f2.write(msg_dict['content'])
+                if isFirst:
+                    f2.write("-"*50 + "\nINPUT\n" + "-"*50 + "\n")
+                    isFirst = False
+                else:
+                    f2.write("\n" + "-"*50 + f"\n{msg_dict.get('name', 'NAME NOT FOUND')}\n" + "-"*50 + "\n")
+                
+                f2.write(msg_dict.get('content','CONTENT NOT FOUND'))
                 f2.write("\n")
-                continue
         
         f2.write("\n"+"-"*50 + "\nFINAL SUMMARY OUTPUT\n" + "-"*50 + "\n")
         f2.write(last_event['payload']['result'][0][1][0].dict().get('content',''))
