@@ -1,5 +1,16 @@
 import json
 import re
+import os
+import tiktoken
+
+def over_tokens(sample):
+    max_tokens = int(os.getenv('SAMPLE_TOKEN_LIMIT'))
+    encoding = tiktoken.get_encoding("cl100k_base")
+    encoded_value = encoding.encode(sample)
+    num_tokens = len(encoded_value)
+    if num_tokens > max_tokens:
+        return True
+    return False
 
 def bryson_backlash_fixer(text):
     # Find all standalone '\n' occurrences (not preceded by a backslash)
@@ -28,10 +39,16 @@ def get_bryson_data(file_path, limit):
             json_object = json.loads(fixed_string)
 
             dat = {
-                "source": f'bryson_dataset_{len(parsed_data)+1}',
+                "source": 'bryson_dataset',
+                "idx": len(parsed_data),
                 "func": json_object['code'],
                 "vuln": 1
             }
+
+            if over_tokens(dat['func']):
+                print('Skipping a sample due to token length...')
+                continue
+
             parsed_data.append(dat)
         except json.JSONDecodeError as e:
             print(f"Error decoding JSON: {e}")
@@ -52,9 +69,15 @@ def get_primevul_data(file_path, limit):
         src = f'primevul_{sample["project"]}_{sample["commit_id"]}'
         dat = {
             "source": src,
+            "idx": sample["idx"],
             "func": sample["func"],
             "vuln": sample["target"]
         }
+
+        if over_tokens(dat['func']):
+            print('Skipping a sample due to token length...')
+            continue
+    
         parsed_data.append(dat)
 
         limit -= 1

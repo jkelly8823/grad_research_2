@@ -322,7 +322,7 @@ graph = workflow.compile()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 samples, convos = form_prompts('PRIMEVUL',SAST_PROMPT, 1)
-convos = truncate_tokens_from_messages(convos, "claude-3-haiku-20240307", 2048)
+
 # print(convos)
 
 # One-Off Sample
@@ -349,7 +349,23 @@ convos = truncate_tokens_from_messages(convos, "claude-3-haiku-20240307", 2048)
 # CALL ReAct AGENT
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-for msgs in convos:
+def extract_vulnerability_info(text):
+    # Regex patterns to match "VULNERABLE" status and the confidence score
+    status_pattern = r"FINAL ANSWER:\s*(\w+)"
+    confidence_pattern = r"CONFIDENCE SCORE:\s*(\d+)"
+
+    # Find matches
+    status_match = re.search(status_pattern, text)
+    confidence_match = re.search(confidence_pattern, text)
+
+    # Extract values if found
+    status = 1 if status_match else 0
+    confidence_score = int(confidence_match.group(1)) if confidence_match else None
+
+    return status, confidence_score
+
+for i in range(0,len(convos)):
+    msgs = convos[i]
     events = graph.stream(
         {
             "messages": msgs
@@ -392,4 +408,11 @@ for msgs in convos:
                 f2.write("\n")
         
         f2.write("\n"+"-"*50 + "\nFINAL SUMMARY OUTPUT\n" + "-"*50 + "\n")
-        f2.write(last_event['payload']['result'][0][1][0].dict().get('content',''))
+        final_output = last_event['payload']['result'][0][1][0].dict().get('content','')
+        f2.write(final_output)
+
+    with open(f"{directory_path}/verdicts.csv", "a+", encoding="utf-8", errors="replace") as f3:
+        # run, source, idx, true_vuln, predicted_vuln, predicted_confidence
+        status, confidence = extract_vulnerability_info(final_output)
+        line = [num_items, samples[i]['source'], samples[i]['idx'], samples[i]['vuln'], status, confidence]
+        f3.write(", ".join(line))

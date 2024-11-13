@@ -15,21 +15,7 @@ def load_cwe_from_xml(file_path: str) -> list:
         
         description = entry.find("cwe:Description", ns).text if entry.find("cwe:Description", ns) is not None else "No description"
         extended_description = entry.find("cwe:Extended_Description", ns).text if entry.find("cwe:Extended_Description", ns) is not None else "No extended description"
-        # related_weaknesses = [
-        #     rel.attrib.get("CWE_ID", "Unknown") for rel in entry.findall("Related_Weaknesses/Related_Weakness")
-        # ] if entry.find("Related_Weaknesses") is not None else ["No related weaknesses"]
-        # applicable_platforms = {
-        #     "Languages": [
-        #         lang.attrib.get("Class", "Not Specified") for lang in entry.findall("Applicable_Platforms/Language")
-        #     ],
-        #     "Technologies": [
-        #         tech.attrib.get("Class", "Not Specified") for tech in entry.findall("Applicable_Platforms/Technology")
-        #     ]
-        # }
-        # background_details = [
-        #     rel.text for rel in entry.findall("Background_Details/Background_Detail")
-        # ] if entry.find("Background_Details") is not None else ["No background details"]
-        # Alternate terms?
+
         alternate_terms = {
             "Languages": [
                 lang.attrib.get("Class", "Not Specified") for lang in entry.findall("cwe:Applicable_Platforms/cwe:Language", ns)
@@ -83,14 +69,14 @@ def load_cwe_from_xml(file_path: str) -> list:
         
         docs.append(Document(page_content=content, metadata={"cwe_id": cwe_id, "name": name, "description": description}))
         
-        # if len(docs) > 1:
-        #     break
+        if len(docs) > 1:
+            break
 
     return docs
 
-# from dotenv import load_dotenv
-# import os
-# load_dotenv()
-# tmp = load_cwe_from_xml(os.getenv('CWE_SRC'))
-# print(tmp)
-# print("LEN:", len(tmp))
+from dotenv import load_dotenv
+import os
+load_dotenv()
+tmp = load_cwe_from_xml(os.getenv('CWE_SRC'))
+print(tmp)
+print("LEN:", len(tmp))

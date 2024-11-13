@@ -19,5 +19,11 @@
 - [ ] Fix token limits in prompters.py
     - [ ] Add MAX_GEN_LENGTH to env file instead
     - [ ] Change how model name get passed to truncater func
+    - [ ] What if I instead pass it a path to a locally created file?
+    - [ ] Doc said ignore stupidly long files
 - [ ] Tweak analyzer prompt to avoid grading remediated code, and focus on the original sourcecode
 - [ ] Correct parsed writer, some return lists in content?
+- [ ] Write methods section by mid next week
+- [ ] Get data flow finalized by Thurs
+- [ ] Finish all data runs by middle of next week
+- [ ] Set limit on number of RAG calls

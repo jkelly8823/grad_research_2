@@ -47,6 +47,12 @@ Specify the model source and particular models for various functionalities:
 - **Analysis Model**: `ANTHROPIC_ANALYSIS_MODEL`
 - **RAG Model**: `ANTHROPIC_RAG_MODEL`
 
+### Token Limits
+
+Specify the maximum accepted token length for code samples
+
+- **SAMPLE_TOKEN_LIMIT**: `TOKEN_LIMIT`
+
 ## Setting Up the Environment
 
 1. **Clone the Repository**:
