@@ -1,1 +1,11 @@
-run, source, idx, true_vuln, predicted_vuln, predicted_confidence
+run,source,idx,true_vuln,predicted_vuln,predicted_confidence
+14,primevul_ImageMagick6_450949ed017f009b399c937cf362f0058eacc5fa,194989,1,0,8
+15,primevul_ImageMagick6_450949ed017f009b399c937cf362f0058eacc5fa,218785,0,0,8
+16,primevul_tensorflow_c79ccba517dbb1a0ccb9b01ee3bd2a63748b60dd,194994,1,0,8
+17,primevul_tensorflow_c79ccba517dbb1a0ccb9b01ee3bd2a63748b60dd,218852,0,0,9
+18,primevul_tensorflow_4f38b1ac8e42727e18a2f0bde06d3bee8e77b250,194996,1,1,9
+19,primevul_tensorflow_4f38b1ac8e42727e18a2f0bde06d3bee8e77b250,218933,0,1,9
+20,primevul_tensorflow_240655511cd3e701155f944a972db71b6c0b1bb6,194998,1,1,8
+21,primevul_tensorflow_240655511cd3e701155f944a972db71b6c0b1bb6,219032,0,0,9
+22,primevul_gpac_ad18ece95fa064efc0995c4ab2c985f77fb166ec,195017,1,1,8
+23,primevul_gpac_ad18ece95fa064efc0995c4ab2c985f77fb166ec,219912,0,1,8

@@ -20,6 +20,7 @@ from langgraph.graph import START, END, StateGraph
 
 # Custom
 from cwe_parser import load_cwe_from_xml
+from prompts import *
 
 # Self-RAG
 # https://langchain-ai.github.io/langgraph/tutorials/rag/langgraph_self_rag/
@@ -36,6 +37,7 @@ def _set_env(key: str):
 
 
 _set_env("ANTHROPIC_API_KEY")
+_set_env("OPENAI_API_KEY")
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # PARSE SOURCES CREATE KB WITH RETRIEVER
@@ -60,7 +62,7 @@ def getDocChunks():
 persist_directory = os.getenv('RAG_PERSIST')
 
 # Check if vectorstore already exists
-if os.path.exists(persist_directory):
+if os.listdir(persist_directory):
     # Load existing vectorstore
     vectorstore = Chroma(
         collection_name="TOOLRAG",
@@ -76,7 +78,6 @@ else:
         embedding=OpenAIEmbeddings(),
         persist_directory=persist_directory
     )
-    vectorstore.persist()  # Save the vectorstore to disk
     print("Created new vectorstore and added documents.")
 # Document Retriever
 retriever = vectorstore.as_retriever()
@@ -86,9 +87,13 @@ retriever = vectorstore.as_retriever()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # LLM
-if os.getenv('MODEL_SRC'):
+if os.getenv('MODEL_SRC') == 'ANTHROPIC':
     llm = ChatAnthropic(
         model=os.getenv('ANTHROPIC_RAG_MODEL'), temperature=0
+    )
+elif os.getenv('MODEL_SRC') == 'OPENAI':
+    llm = ChatOpenAI(
+        model=os.getenv('OPENAI_RAG_MODEL'), temperature=0
     )
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -107,14 +112,10 @@ class GradeDocuments(BaseModel):
 structured_llm_grader_retrieval = llm.with_structured_output(GradeDocuments)
 
 # Prompt
-system = """You are a grader assessing relevance of a retrieved document to a user question. \n 
-    It does not need to be a stringent test. The goal is to filter out erroneous retrievals. \n
-    If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n
-    Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question."""
 grade_prompt = ChatPromptTemplate.from_messages(
     [
-        ("system", system),
-        ("human", "Retrieved document: \n\n {document} \n\n User question: {question}"),
+        ("system", DOC_GRADER_SYSTEM),
+        ("human", DOC_GRADER_HUMAN),
     ]
 )
 retrieval_grader = grade_prompt | structured_llm_grader_retrieval
@@ -124,13 +125,11 @@ retrieval_grader = grade_prompt | structured_llm_grader_retrieval
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Prompt
-prompt = hub.pull("rlm/rag-prompt")
-"""
-You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
-Question: {question} 
-Context: {context} 
-Answer:
-"""
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("human", GENERATOR)
+    ]
+)
 # Post-processing
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
@@ -153,12 +152,10 @@ class GradeHallucinations(BaseModel):
 structured_llm_grader_hallucination = llm.with_structured_output(GradeHallucinations)
 
 # Prompt
-system = """You are a grader assessing whether an LLM generation is grounded in / supported by a set of retrieved facts. \n 
-     Give a binary score 'yes' or 'no'. 'Yes' means that the answer is grounded in / supported by the set of facts."""
 hallucination_prompt = ChatPromptTemplate.from_messages(
     [
-        ("system", system),
-        ("human", "Set of facts: \n\n {documents} \n\n LLM generation: {generation}"),
+        ("system", HALLUCINATION_GRADER_SYSTEM),
+        ("human", HALLUCINATION_GRADER_HUMAN),
     ]
 )
 hallucination_grader = hallucination_prompt | structured_llm_grader_hallucination
@@ -179,12 +176,10 @@ class GradeAnswer(BaseModel):
 # LLM with function call
 structured_llm_grader_answer = llm.with_structured_output(GradeAnswer)
 # Prompt
-system = """You are a grader assessing whether an answer addresses / resolves a question \n 
-     Give a binary score 'yes' or 'no'. Yes' means that the answer resolves the question."""
 answer_prompt = ChatPromptTemplate.from_messages(
     [
-        ("system", system),
-        ("human", "User question: \n\n {question} \n\n LLM generation: {generation}"),
+        ("system", ANSWER_GRADER_SYSTEM),
+        ("human", ANSWER_GRADER_HUMAN),
     ]
 )
 answer_grader = answer_prompt | structured_llm_grader_answer
@@ -194,14 +189,12 @@ answer_grader = answer_prompt | structured_llm_grader_answer
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Prompt
-system = """You a question re-writer that converts an input question to a better version that is optimized \n 
-     for vectorstore retrieval. Look at the input and try to reason about the underlying semantic intent / meaning."""
 re_write_prompt = ChatPromptTemplate.from_messages(
     [
-        ("system", system),
+        ("system", REWRITER_SYSTEM),
         (
-            "human",
-            "Here is the initial question: \n\n {question} \n Formulate an improved question.",
+            "human", REWRITER_HUMAN
+            ,
         ),
     ]
 )

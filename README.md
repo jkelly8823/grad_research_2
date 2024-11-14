@@ -34,18 +34,19 @@ The project also allows configuration of paths for data sources and outputs:
 
 - **CWE Source File**: `CWE_SRC` – Location of the CWE XML file to build the RAG knowledge base.
 - **RAG Knowledge Base Directory**: `RAG_PERSIST` – Directory to persist RAG knowledge base.
-- **Recursion Limit for RAG**: `RAG_RECURSION_LIMIT`
+- **Recursion Limit for RAG**: `RAG_RECURSION_LIMIT` - Subgraph internal recursion limit
+- **Call Limit for RAG**: `RAG_CALL_LIMIT` - Subgraph call limit
 - **Output Path**: `OUTPUT_PTH` – Directory to save run outputs.
 
 ### Model Source and Model Names
 
 Specify the model source and particular models for various functionalities:
 
-- **Model Source**: `MODEL_SRC` (e.g., `Anthropic`)
-- **SAST Model**: `ANTHROPIC_SAST_MODEL`
-- **Summarization Model**: `ANTHROPIC_SUMMARIZE_MODEL`
-- **Analysis Model**: `ANTHROPIC_ANALYSIS_MODEL`
-- **RAG Model**: `ANTHROPIC_RAG_MODEL`
+- **Model Source**: `MODEL_SRC` - (`ANTHROPIC`, `OPENAI`)
+- **SAST Model**: `SRC_SAST_MODEL`- Replace `SRC` with your chosen model source, e.g. `ANTHROPIC_SAST_MODEL`
+- **Summarization Model**: `SRC_SUMMARIZE_MODEL`
+- **Analysis Model**: `SRC_ANALYSIS_MODEL`
+- **RAG Model**: `SRC_RAG_MODEL`
 
 ### Token Limits
 

@@ -15,6 +15,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 # Model Specific
 from langchain_anthropic import ChatAnthropic
+from langchain_openai import ChatOpenAI
 
 # Custom Files
 from sasts import *
@@ -71,12 +72,7 @@ tool_node = ToolNode(sast_tools+fake_tools)
 # MODELS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Analysis model: claude-3-5-sonnet-20241022 OR claude-3-opus-20240229
-# SAST Model: claude-3-haiku-20240307
-# Summarize Model: claude-3-haiku-20240307 OR claude-3-sonnet-20240229
-# RAG Model: claude-3-haiku-20240307
-
-if os.getenv('MODEL_SRC'):
+if os.getenv('MODEL_SRC') == 'ANTHROPIC':
     sast_model = ChatAnthropic(
         model=os.getenv('ANTHROPIC_SAST_MODEL'), temperature=0
     )
@@ -87,6 +83,18 @@ if os.getenv('MODEL_SRC'):
 
     analysis_model = ChatAnthropic(
         model=os.getenv('ANTHROPIC_ANALYSIS_MODEL'), temperature=0
+    )
+elif os.getenv('MODEL_SRC') == 'OPENAI':
+    sast_model = ChatOpenAI(
+        model=os.getenv('OPENAI_SAST_MODEL'), temperature=0
+    )
+
+    summarize_model = ChatOpenAI(
+        model=os.getenv('OPENAI_SUMMARIZE_MODEL'), temperature=0
+    )
+
+    analysis_model = ChatOpenAI(
+        model=os.getenv('OPENAI_ANALYSIS_MODEL'), temperature=0
     )
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,12 +107,7 @@ def create_agent(llm, tools, system_message: str):
         [
             (
                 "system",
-                "You are a helpful AI assistant, collaborating with other assistants."
-                " Use the provided tools to progress towards answering the question."
-                " If you are unable to fully answer, that's OK, another assistant with different tools "
-                " will help where you left off. Execute what you can to make progress."
-                " You are not allowed to return an empty response under any circumstance, instead state DONE."
-                " You have access to the following tools: {tool_names}.\n{system_message}",
+                AGENT_PROMPT,
             ),
             MessagesPlaceholder(variable_name="messages"),
         ]
@@ -118,19 +121,19 @@ def create_agent(llm, tools, system_message: str):
 sast_agent = create_agent(
     sast_model,
     sast_tools,
-    system_message="You should run all relevent static analysis tools to provide outputs for the Summarizer to use. If you are done running tools, you must state 'No more applicable tools.'",
+    system_message=SAST_SYSTEM_PROMPT
 )
 
 summarize_agent = create_agent(
     summarize_model,
     fake_tools,
-    system_message="You should provide accurate summarizations of previously generated information for all other models to use.",
+    system_message=SUMMARIZE_SYSTEM_PROMPT
 )
 
 analyze_agent = create_agent(
     analysis_model,
     fake_tools,
-    system_message="You should use the provided information to detect all potential vulnerabilties in the originally presented code sample. You may request additional information. You should avoid false positives and false negatives."
+    system_message=ANALYZE_SYSTEM_PROMPT
 )
 
 # !!!!!!!!!!!!! DEFINE STATE !!!!!!!!!!!!!
@@ -141,6 +144,7 @@ class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], operator.add]
     sender: str
     target: str
+    rag_calls: int
 
 # !!!!!!!!!!!!! DEFINE AGENT NODES !!!!!!!!!!!!!
 
@@ -152,16 +156,15 @@ def call_rag(state):
     return {
         'messages': [AIMessage(rag_output['generation'], name='Rag_subgraph')],
         'sender': 'Rag_subgraph',
-        'target': 'Prompter_node'
+        'target': 'Prompter_node',
+        'rag_calls': state.get('rag_calls',int(os.getenv('RAG_CALL_LIMIT')))-1
     }
 
 # Fake Human Node to provide checkpoint prompts
 def human_feedback(state):
     results = state['messages'][-1].dict().get('content', '')
     if state['sender'] == 'Sast_runner':
-        prompt = ("Please summarize all of the static analysis results from all of the previous tool runs."
-                  " Indicate which tools you are summarizing in your response."
-        )
+        prompt = HUMAN_SAST_SUMMARIZER
         target = 'Summarizer'
     elif state['sender'] == 'Analyzer':
         last_msg = state['messages'][-1].dict().get('content', '')
@@ -170,33 +173,23 @@ def human_feedback(state):
             prompt = last_msg[loc:]
             target = 'Rag_subgraph'
         else:
-            prompt = ("Prepend your response with FINAL ANSWER. Follow this with VULNERABLE or SAFE depending on the results."
-                    " Immediately after, include a CONFIDENCE SCORE, with a score describing your certainty regarding"
-                    " your analysis on a scale from 0 to 10."
-                    " Please summarize the following results:"
-                    f"\n{results}"
-            )
+            prompt = HUMAN_ANALYZER_SUMMARIZER.format(results=results)
             target = 'Summarizer'
     elif state['sender'] == 'Summarizer':
-        prompt = ("Please utilize the output of the summary to inform your analysis of the original code sample."
-                  " Evaluate it for any vulnerabilities you can find while avoiding false positives."
-                  " Intensively review all detections, reasoning through to ensure they are accurate."
-                  " If no true positive vulnerabilities are found respond NONE."
-                  " You have access to a peer RAG agent. If you would like more basic information on a vulnerability,"
-                  " then at the end of your response, respond with 'QNA:', then your list of questions. Your questions"
-                  " should be at the very end of your message. Keep your questions as simple as possible, as you are"
-                  " querying the Common Weakness Enumeration database. An example request would be to provide a" 
-                  " description or example of a specific type of vulnerability."
-        )
+        prompt = HUMAN_SUMMARIZER_ANALYZER
         target = 'Analyzer'
     elif state['sender'] == 'Rag_subgraph':
-        prompt = f'The answers to your questions are as follows:\n{results}'
+        if state.get('rag_calls',-1) == 0:
+            prompt = HUMAN_RAGLIMIT_ANALYZER.format(results=results)
+        else:
+            prompt = HUMAN_RAG_ANALYZER.format(results=results)
         target = 'Analyzer'
     msg = HumanMessage(prompt, name='Prompter_node')
     return {
         "messages": [msg],
         "sender": 'Prompter_node',
-        "target": target
+        "target": target,
+        'rag_calls': state.get('rag_calls',int(os.getenv('RAG_CALL_LIMIT')))
     }
 
 # Helper function to create a node for a given agent
@@ -214,7 +207,8 @@ def agent_node(state, agent, name):
     return {
         "messages": [result],
         "sender": name,
-        "target": "Prompter_node"
+        "target": "Prompter_node",
+        'rag_calls': state.get('rag_calls',int(os.getenv('RAG_CALL_LIMIT')))
     }
 
 sast_node = functools.partial(agent_node, agent=sast_agent, name="Sast_runner")
@@ -321,7 +315,7 @@ graph = workflow.compile()
 # PROMPTS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-samples, convos = form_prompts('PRIMEVUL',SAST_PROMPT, 1)
+samples, convos = form_prompts('PRIMEVUL',START_PROMPT, 10)
 
 # print(convos)
 
@@ -359,7 +353,7 @@ def extract_vulnerability_info(text):
     confidence_match = re.search(confidence_pattern, text)
 
     # Extract values if found
-    status = 1 if status_match else 0
+    status = 1 if 'VULN' in status_match.group(1).upper() else 0
     confidence_score = int(confidence_match.group(1)) if confidence_match else None
 
     return status, confidence_score
@@ -415,4 +409,5 @@ for i in range(0,len(convos)):
         # run, source, idx, true_vuln, predicted_vuln, predicted_confidence
         status, confidence = extract_vulnerability_info(final_output)
         line = [num_items, samples[i]['source'], samples[i]['idx'], samples[i]['vuln'], status, confidence]
-        f3.write(", ".join(line))
+        f3.write(",".join(map(str,line)))
+        f3.write('\n')

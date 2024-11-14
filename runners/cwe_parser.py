@@ -5,52 +5,99 @@ from langchain.schema import Document
 def load_cwe_from_xml(file_path: str) -> list:
     tree = ET.parse(file_path)
     root = tree.getroot()
-    # Define the namespace
     ns = {"cwe": "http://cwe.mitre.org/cwe-7"}
     docs = []
-    # Iterate through each CWE entry
+
     for entry in root.findall(".//cwe:Weakness", ns):
         cwe_id = entry.get("ID", "Unknown")
         name = entry.get("Name", "No Name")
         
-        description = entry.find("cwe:Description", ns).text if entry.find("cwe:Description", ns) is not None else "No description"
-        extended_description = entry.find("cwe:Extended_Description", ns).text if entry.find("cwe:Extended_Description", ns) is not None else "No extended description"
-
-        alternate_terms = {
+        # Basic Descriptions
+        description = ''.join(entry.find("cwe:Description", ns).itertext()) if entry.find("cwe:Description", ns) else "No description"
+        extended_description = ''.join(entry.find("cwe:Extended_Description", ns).itertext()) if entry.find("cwe:Extended_Description", ns) else "No extended description"
+        
+        # Applicable Platforms
+        applicable_platforms = {
             "Languages": [
-                lang.attrib.get("Class", "Not Specified") for lang in entry.findall("cwe:Applicable_Platforms/cwe:Language", ns)
+                {
+                    "Name": lang.attrib.get("Name", "Unknown"),
+                    "Class": lang.attrib.get("Class", "Unknown"),
+                    "Prevalence": lang.attrib.get("Prevalence", "Unknown")
+                }
+                for lang in entry.findall("cwe:Applicable_Platforms/cwe:Language", ns)
+            ],
+            "Operating_Systems": [
+                {
+                    "Name": os.attrib.get("Name", "Unknown"),
+                    "Version": os.attrib.get("Version", "Unknown"),
+                    "CPE_ID": os.attrib.get("CPE_ID", "Unknown"),
+                    "Class": os.attrib.get("Class", "Unknown"),
+                    "Prevalence": os.attrib.get("Prevalence", "Unknown")
+                }
+                for os in entry.findall("cwe:Applicable_Platforms/cwe:Operating_System", ns)
+            ],
+            "Architectures": [
+                {
+                    "Name": arch.attrib.get("Name", "Unknown"),
+                    "Class": arch.attrib.get("Class", "Unknown"),
+                    "Prevalence": arch.attrib.get("Prevalence", "Unknown")
+                }
+                for arch in entry.findall("cwe:Applicable_Platforms/cwe:Architecture", ns)
             ],
             "Technologies": [
-                tech.attrib.get("Class", "Not Specified") for tech in entry.findall("cwe:Applicable_Platforms/cwe:Technology", ns)
+                {
+                    "Name": tech.attrib.get("Name", "Unknown"),
+                    "Class": tech.attrib.get("Class", "Unknown"),
+                    "Prevalence": tech.attrib.get("Prevalence", "Unknown")
+                }
+                for tech in entry.findall("cwe:Applicable_Platforms/cwe:Technology", ns)
             ]
-        }     
+        }
         
-        # Collect common consequences
+        # Background Details
+        background_details = [
+            ''.join(detail.itertext())
+            for detail in entry.findall("cwe:Background_Details/cwe:Background_Detail", ns)
+        ] or ["No background details"]
+
+        # Alternate Terms
+        alternate_terms = [
+            {
+                "Term": term.find("cwe:Term", ns).text if term.find("cwe:Term", ns) else "No Term",
+                "Description": ''.join(term.find("cwe:Description", ns).itertext()) if term.find("cwe:Description", ns) else "No Description"
+            }
+            for term in entry.findall("cwe:Alternate_Terms/cwe:Alternate_Term", ns)
+        ]
+
+        # Common Consequences
         common_consequences = [
             {
-                "Scope": cons.find("cwe:Scope", ns).text if cons.find("cwe:Scope", ns) is not None else "No Scope",
-                "Impact": cons.find("cwe:Impact", ns).text if cons.find("cwe:Impact", ns) is not None else "No Impact",
-                "Note": cons.find("cwe:Note", ns).text if cons.find("cwe:Note", ns) is not None else "No Note"
-            } for cons in entry.findall("cwe:Common_Consequences/cwe:Consequence", ns)
+                "Scope": cons.find("cwe:Scope", ns).text if cons.find("cwe:Scope", ns) else "No Scope",
+                "Impact": cons.find("cwe:Impact", ns).text if cons.find("cwe:Impact", ns) else "No Impact",
+                "Note": ''.join(cons.find("cwe:Note", ns).itertext()) if cons.find("cwe:Note", ns) else "No Note"
+            }
+            for cons in entry.findall("cwe:Common_Consequences/cwe:Consequence", ns)
         ]
         
-        # Collect detection methods
+        # Detection Methods
         detection_methods = [
             {
-                "Method": dm.find("cwe:Method", ns).text if dm.find("cwe:Method", ns) is not None else "No Method",
-                "Description": dm.find("cwe:Description", ns).text if dm.find("cwe:Description", ns) is not None else "No Description",
-                "Effectiveness": dm.find("cwe:Effectiveness", ns).text if dm.find("cwe:Effectiveness", ns) is not None else "No Effectiveness"
-            } for dm in entry.findall("cwe:Detection_Methods/cwe:Detection_Method", ns)
+                "Method": dm.find("cwe:Method", ns).text if dm.find("cwe:Method", ns) else "No Method",
+                "Description": ''.join(dm.find("cwe:Description", ns).itertext()) if dm.find("cwe:Description", ns) else "No Description",
+                "Effectiveness": dm.find("cwe:Effectiveness", ns).text if dm.find("cwe:Effectiveness", ns) else "No Effectiveness"
+            }
+            for dm in entry.findall("cwe:Detection_Methods/cwe:Detection_Method", ns)
         ]
         
-        # Collect potential mitigations
+        # Potential Mitigations
         potential_mitigations = [
             {
-                "Phase": mit.find("cwe:Phase", ns).text if mit.find("cwe:Phase", ns) is not None else "No Phase",
-                "Description": mit.find("cwe:Description", ns).text if mit.find("cwe:Description", ns) is not None else "No Description",
-                "Effectiveness": mit.find("cwe:Effectiveness", ns).text if mit.find("cwe:Effectiveness", ns) is not None else "No Effectiveness",
-                "Effectiveness_Notes": mit.find("cwe:Effectiveness_Notes", ns).text if mit.find("cwe:Effectiveness_Notes", ns) is not None else "No Notes"
-            } for mit in entry.findall("cwe:Potential_Mitigations/cwe:Mitigation", ns)
+                "Phase": mit.find("cwe:Phase", ns).text if mit.find("cwe:Phase", ns) else "No Phase",
+                "Description": ''.join(mit.find("cwe:Description", ns).itertext()) if mit.find("cwe:Description", ns) else "No Description",
+                "Effectiveness": mit.find("cwe:Effectiveness", ns).text if mit.find("cwe:Effectiveness", ns) else "No Effectiveness",
+                "Effectiveness_Notes": ''.join(mit.find("cwe:Effectiveness_Notes", ns).itertext()) if mit.find("cwe:Effectiveness_Notes", ns) else "No Notes"
+            }
+            for mit in entry.findall("cwe:Potential_Mitigations/cwe:Mitigation", ns)
         ]
         
         # Compile all relevant information into a single document
@@ -58,25 +105,21 @@ def load_cwe_from_xml(file_path: str) -> list:
             f"CWE-{cwe_id}: {name}\n"
             f"Description: {description}\n"
             f"Extended Description: {extended_description}\n"
+            f"Applicable Platforms: {applicable_platforms}\n"
+            f"Background Details: {background_details}\n"
             f"Alternate Terms: {alternate_terms}\n"
-            # f"Related Weaknesses: {', '.join(related_weaknesses)}\n"
-            # f"Applicable Platforms: {applicable_platforms}\n"
-            # f"Background Details: {applicable_platforms}\n"
             f"Common Consequences: {common_consequences}\n"
             f"Detection Methods: {detection_methods}\n"
             f"Potential Mitigations: {potential_mitigations}"
         )
         
         docs.append(Document(page_content=content, metadata={"cwe_id": cwe_id, "name": name, "description": description}))
-        
-        if len(docs) > 1:
-            break
 
     return docs
 
-from dotenv import load_dotenv
-import os
-load_dotenv()
-tmp = load_cwe_from_xml(os.getenv('CWE_SRC'))
-print(tmp)
-print("LEN:", len(tmp))
+# from dotenv import load_dotenv
+# import os
+# load_dotenv()
+# tmp = load_cwe_from_xml(os.getenv('CWE_SRC'))
+# print(tmp)
+# print("LEN:", len(tmp))
