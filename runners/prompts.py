@@ -39,6 +39,8 @@ HUMAN_SAST_SUMMARIZER = ("Please summarize all of the static analysis results fr
 HUMAN_ANALYZER_SUMMARIZER = ("Prepend your response with FINAL ANSWER. Follow this with VULNERABLE or SAFE depending on the results."
                              " Immediately after, include a CONFIDENCE SCORE, with a score describing your certainty regarding"
                              " your analysis on a scale from 0 to 10. Do not base the vulnerable status and confidence on any remediation provided."
+                             " Carefully work through the provided information to ensure that your response is accurate. Be certain to distill the most"
+                             " recent evaluation from the given information."
                              " Please summarize the following results:"
                              "\n{results}"
                              )
@@ -52,22 +54,22 @@ HUMAN_SUMMARIZER_ANALYZER = ("Please utilize the output of the summary to inform
                     " should be at the very end of your message. Keep your questions as simple as possible, as you are"
                     " querying the Common Weakness Enumeration database. An example request would be to provide a" 
                     " description or example of a specific type of vulnerability. When you have exhaustively reasoned through"
-                    " all existing vulnerabilities, and excluded all false postives, output your final analysis prepended by:"
+                    " all existing vulnerabilities, and excluded all false postives, output your final revised analysis prepended by:"
                     " FINAL ANALYSIS:"
                     )
 
 HUMAN_RAG_ANALYZER = ("The answers to your questions are as follows:\n{results}\n\n"
                       "Please use the above answers to further inform your analysis."
                       " You may ask further questions as needed."
-                      " When you have exhaustively reasoned through all existing vulnerabilities,"
-                      " and excluded all false postives, output your final analysis prepended by: FINAL ANALYSIS:"
+                      " When you have no more questions and have exhaustively reasoned through all existing vulnerabilities "
+                      " and excluded all false postives, output your revised final analysis prepended by: FINAL ANALYSIS:"
                       )
 
 HUMAN_RAGLIMIT_ANALYZER = ("The answers to your questions are as follows:\n{results}\n\n"
                       "Please use the above answers to further inform your analysis."
                       " You have reached your question limit, and are not permitted to ask any further questions."
                       " When you have exhaustively reasoned through all existing vulnerabilities,"
-                      " and excluded all false postives, output your final analysis prepended by: FINAL ANALYSIS:"
+                      " and excluded all false postives, output your revised final analysis prepended by: FINAL ANALYSIS:"
                       )
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

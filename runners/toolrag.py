@@ -35,6 +35,8 @@ def _set_env(var: str):
 _set_env("ANTHROPIC_API_KEY")
 _set_env("OPENAI_API_KEY")
 
+VERBOSE = int(os.getenv('VERBOSE'))
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEFINE TOOLS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -72,7 +74,7 @@ tool_node = ToolNode(sast_tools+fake_tools)
 # MODELS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-if os.getenv('MODEL_SRC') == 'ANTHROPIC':
+if os.getenv('MAIN_MODEL_SRC') == 'ANTHROPIC':
     sast_model = ChatAnthropic(
         model=os.getenv('ANTHROPIC_SAST_MODEL'), temperature=0
     )
@@ -84,7 +86,7 @@ if os.getenv('MODEL_SRC') == 'ANTHROPIC':
     analysis_model = ChatAnthropic(
         model=os.getenv('ANTHROPIC_ANALYSIS_MODEL'), temperature=0
     )
-elif os.getenv('MODEL_SRC') == 'OPENAI':
+elif os.getenv('MAIN_MODEL_SRC') == 'OPENAI':
     sast_model = ChatOpenAI(
         model=os.getenv('OPENAI_SAST_MODEL'), temperature=0
     )
@@ -152,7 +154,8 @@ class AgentState(TypedDict):
 def call_rag(state):
     rag_input = {'question': state['messages'][-1].dict().get('content', '')}
     rag_output = rag_graph.invoke(rag_input)
-    print(rag_output)
+    if VERBOSE:
+        print(rag_output)
     return {
         'messages': [AIMessage(rag_output['generation'], name='Rag_subgraph')],
         'sender': 'Rag_subgraph',
@@ -223,8 +226,8 @@ def router(state):
     messages = state["messages"]
     last_message = messages[-1].dict()
 
-    print('IN ROUTER FOR:', last_message.get('name', ''))
-    # print(state)
+    if VERBOSE:
+        print('IN ROUTER FOR:', last_message.get('name', ''))
 
     if last_message.get('tool_calls',0):
         # The previous agent is invoking a tool
@@ -315,7 +318,7 @@ graph = workflow.compile()
 # PROMPTS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-samples, convos = form_prompts('PRIMEVUL',START_PROMPT, 10, [197057,250692])
+samples, convos = form_prompts('PRIMEVUL',START_PROMPT, 150)
 
 # print(convos)
 
@@ -377,7 +380,10 @@ for i in range(0,len(convos)):
     last_event = None
     
     for s in events:
-        print(s)
+        if VERBOSE:
+            print(s)
+        else:
+            print(f"{s.get('step')}: {s.get('payload').get('name')}")
         print("----")
         f.write(str(s))
         f.write("\n----\n")

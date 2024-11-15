@@ -39,6 +39,8 @@ def _set_env(key: str):
 _set_env("ANTHROPIC_API_KEY")
 _set_env("OPENAI_API_KEY")
 
+VERBOSE = int(os.getenv('VERBOSE'))
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # PARSE SOURCES CREATE KB WITH RETRIEVER
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,11 +89,11 @@ retriever = vectorstore.as_retriever()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # LLM
-if os.getenv('MODEL_SRC') == 'ANTHROPIC':
+if os.getenv('RAG_MODEL_SRC') == 'ANTHROPIC':
     llm = ChatAnthropic(
         model=os.getenv('ANTHROPIC_RAG_MODEL'), temperature=0
     )
-elif os.getenv('MODEL_SRC') == 'OPENAI':
+elif os.getenv('RAG_MODEL_SRC') == 'OPENAI':
     llm = ChatOpenAI(
         model=os.getenv('OPENAI_RAG_MODEL'), temperature=0
     )
@@ -239,8 +241,9 @@ def retrieve(state):
     generation = ""
     recursion = state.get('recursion',0)
     sender = state.get('sender','NA')
-    print("STATE_REC:", recursion)
-    print("STATE_SEN:", sender)
+    if VERBOSE:
+        print("STATE_REC:", recursion)
+        print("STATE_SEN:", sender)
     if sender == 'NA':
         recursion = 0
     else:
@@ -268,8 +271,9 @@ def generate(state):
     generation = ""
     recursion = state.get('recursion',0)
     sender = state.get('sender','NA')
-    print("STATE_REC:", recursion)
-    print("STATE_SEN:", sender)
+    if VERBOSE:
+        print("STATE_REC:", recursion)
+        print("STATE_SEN:", sender)
     if sender != 'grade_documents':
         recursion += 1
     
@@ -307,10 +311,12 @@ def grade_documents(state):
         )
         grade = score.binary_score
         if grade == "yes":
-            print("---GRADE: DOCUMENT RELEVANT---")
+            if VERBOSE:
+                print("---GRADE: DOCUMENT RELEVANT---")
             filtered_docs.append(d)
         else:
-            print("---GRADE: DOCUMENT NOT RELEVANT---")
+            if VERBOSE:
+                print("---GRADE: DOCUMENT NOT RELEVANT---")
             continue
     # return {"documents": filtered_docs, "question": question}
     return {"question": question, "generation": generation, "documents": filtered_docs, "recursion":recursion, "sender":"grade_documents"}
@@ -356,7 +362,8 @@ def decide_to_generate(state):
 
     print("---ASSESS GRADED DOCUMENTS---")
     recursion = state.get('recursion','0')
-    print("STATE_REC:", recursion)
+    if VERBOSE:
+        print("STATE_REC:", recursion)
     if past_recursion(recursion):
         return "exceeded_limit"
 
@@ -389,7 +396,8 @@ def grade_generation_v_documents_and_question(state):
 
     print("---CHECK HALLUCINATIONS---")
     recursion = state.get('recursion','0')
-    print("STATE_REC:", recursion)
+    if VERBOSE:
+        print("STATE_REC:", recursion)
     if past_recursion(recursion):
         return "exceeded_limit"
     
@@ -420,7 +428,8 @@ def grade_generation_v_documents_and_question(state):
         return "not supported"
     
 def past_recursion(recursion):
-    print("RECURSION:", recursion, 'vs', int(os.getenv('RAG_RECURSION_LIMIT')))
+    if VERBOSE:
+        print("RECURSION:", recursion, 'vs', int(os.getenv('RAG_RECURSION_LIMIT')))
     if recursion > int(os.getenv('RAG_RECURSION_LIMIT')):
         pprint("---RECURSION LIMIT REACHED, EXITING RAG---")
         return True

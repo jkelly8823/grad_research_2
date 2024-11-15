@@ -42,7 +42,8 @@ The project also allows configuration of paths for data sources and outputs:
 
 Specify the model source and particular models for various functionalities:
 
-- **Model Source**: `MODEL_SRC` - (`ANTHROPIC`, `OPENAI`)
+- **Main Model Source**: `MAIN_MODEL_SRC` - (`ANTHROPIC`, `OPENAI`), for all non-RAG instances
+- **RAG Model Source**: `RAG_MODEL_SRC` - (`ANTHROPIC`, `OPENAI`), for all RAG instances
 - **SAST Model**: `SRC_SAST_MODEL`- Replace `SRC` with your chosen model source, e.g. `ANTHROPIC_SAST_MODEL`
 - **Summarization Model**: `SRC_SUMMARIZE_MODEL`
 - **Analysis Model**: `SRC_ANALYSIS_MODEL`
