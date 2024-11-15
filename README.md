@@ -79,23 +79,22 @@ Specify the maximum accepted token length for code samples
 5. **Verify API Keys and Paths**: Ensure all necessary keys and file paths are set correctly. Incomplete or incorrect configurations may lead to errors during runtime
 
 ## Running the Project
-To start the project, use the main script ```runners\toolrag.py```
-    ```bash
-    py .\runners\toolrag.py
-    ```
-
+To start the project, execute the main script:  
+```bash
+py .\runners\toolrag.py
+```
 ## Additional Information
-# Model Selection
+### Model Selection
 The ```.env``` file allows flexibility in choosing between different model sources (OpenAI or Anthropic). Ensure that the selected model configurations align with the source specified in MODEL_SRC. This setup supports various model tasks, including:
 - Static analysis and security testing
 - Summarization
 - Code analysis
 - Retrieval-augmented generation
 
-# Knowledge Base and Output Directories
+### Knowledge Base and Output Directories
 The configuration includes settings for constructing a RAG knowledge base from a CWE XML file, as well as specifying a directory to save processed output data. Ensure these paths are accessible and writable.
 
-# Troubleshooting
+### Troubleshooting
 If you encounter issues:
 - **Check API Key Validity**: Ensure that all API keys are up to date and have sufficient permissions.
 - **Verify Paths**: Double-check that all paths in the .env file point to the correct files and directories.
