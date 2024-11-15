@@ -1,5 +1,10 @@
-Metric,Count
-TP,3
-TN,3
-FP,2
-FN,2
+Metric,Count,Score
+TP,3.0,
+TN,3.0,
+FP,2.0,
+FN,2.0,
+Accuracy,,0.6
+Precision,,0.6
+Recall,,0.6
+F1 Score,,0.6
+AUC,,0.3

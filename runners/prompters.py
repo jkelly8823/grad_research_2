@@ -8,12 +8,12 @@ load_dotenv()
 from dataset_parsers import *
 from prompts import *
 
-def form_prompts(src, prompt, limit=-1):
+def form_prompts(src, prompt, limit=-1, cherrypick = []):
     convos = []
     if src == 'BRYSON':
-        samples = get_bryson_data(os.getenv('bryson'), limit)
+        samples = get_bryson_data(os.getenv('bryson'), limit, cherrypick)
     elif src == 'PRIMEVUL':
-        samples = get_primevul_data(os.getenv('primevul'), limit)
+        samples = get_primevul_data(os.getenv('primevul'), limit, cherrypick)
     for sample in samples:
         sample['prompt'] = prompt.format(func = sample['func'])
         convos.append([HumanMessage(sample['prompt'])])

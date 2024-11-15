@@ -46,8 +46,7 @@ def get_bryson_data(file_path, limit, cherrypick):
                 "source": 'bryson_dataset',
                 "idx": idx,
                 "func": json_object['code'],
-                "vuln": 1,
-                "cwe": json_object.get('cwe', [])
+                "vuln": 1
             }
 
             if over_tokens(dat['func']):
@@ -79,8 +78,7 @@ def get_primevul_data(file_path, limit, cherrypick):
             "source": src,
             "idx": sample["idx"],
             "func": sample["func"],
-            "vuln": sample["target"],
-            "cwe": sample.get('cwe', [])
+            "vuln": sample["target"]
         }
 
         if over_tokens(dat['func']):
@@ -93,3 +91,20 @@ def get_primevul_data(file_path, limit, cherrypick):
         if limit == 0:
             break
     return parsed_data
+
+# -----------------------------------------------------------------
+# -----------------------------------------------------------------
+# -----------------------------------------------------------------
+# -----------------------------------------------------------------
+
+import dotenv
+dotenv.load_dotenv()
+
+prime_ids = [194994, 218852, 194996, 218933]
+primes = get_primevul_data(os.getenv('PRIMEVUL'), -1, prime_ids)
+
+for dat in primes:
+    sample = dat['func']
+    id = dat['idx']
+    with open(f'misc/primevul_{id}.c', mode='w+', encoding='utf-8', errors='replace') as file:
+        file.write(sample)

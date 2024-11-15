@@ -315,7 +315,7 @@ graph = workflow.compile()
 # PROMPTS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-samples, convos = form_prompts('PRIMEVUL',START_PROMPT, 10)
+samples, convos = form_prompts('PRIMEVUL',START_PROMPT, 10, [197057,250692])
 
 # print(convos)
 
@@ -406,8 +406,15 @@ for i in range(0,len(convos)):
         f2.write(final_output)
 
     with open(f"{directory_path}/verdicts.csv", "a+", encoding="utf-8", errors="replace") as f3:
-        # run, source, idx, true_vuln, predicted_vuln, predicted_confidence
+        # Move cursor to start and check if header is needed
+        f3.seek(0)
+        if sum(1 for line in f3) == 0:  # If no lines, write header
+            header = "run,source,idx,true_vuln,predicted_vuln,predicted_confidence,cwe\n"
+            f3.write(header)
+        
+        # Prepare the line of data to write
         status, confidence = extract_vulnerability_info(final_output)
-        line = [num_items, samples[i]['source'], samples[i]['idx'], samples[i]['vuln'], status, confidence]
-        f3.write(",".join(map(str,line)))
-        f3.write('\n')
+        line = [num_items, samples[i]['source'], samples[i]['idx'], samples[i]['vuln'], status, confidence, json.dumps(samples[i]['cwe'])]
+        
+        # Write data line to the file
+        f3.write(",".join(map(str, line)) + '\n')
