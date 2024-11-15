@@ -1,10 +1,11 @@
 Metric,Count,Score
-TP,3.0,
-TN,3.0,
+TP,5.0,
+TN,5.0,
 FP,2.0,
 FN,2.0,
-Accuracy,,0.6
-Precision,,0.6
-Recall,,0.6
-F1 Score,,0.6
-AUC,,0.3
+Accuracy,,0.7142857142857143
+Precision,,0.7142857142857143
+Recall,,0.7142857142857143
+F1 Score,,0.7142857142857143
+AUC,,0.7551020408163265
+Avg Confidence,,0.8357142857142857
