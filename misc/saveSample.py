@@ -113,7 +113,7 @@ def get_primevul_data(file_path, limit, start_idx, cherrypick):
 import dotenv
 dotenv.load_dotenv()
 
-prime_ids = [219912]
+prime_ids = [195801]
 primes = get_primevul_data(os.getenv('PRIMEVUL'), limit=-1, start_idx=-1, cherrypick=prime_ids)
 
 for dat in primes:

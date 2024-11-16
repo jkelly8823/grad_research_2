@@ -117,21 +117,81 @@ df_exploded['predicted_pos_confidence_normalized'] = df_exploded.apply(
     if row['predicted_vuln'] == 1 
     else 1 - row['predicted_confidence_normalized'], axis=1)
 
-# Group by individual CWE and calculate metrics
+# Define conditions for TP, TN, FP, FN for each row
+df_exploded['TP'] = ((df_exploded['true_vuln'] == 1) & (df_exploded['predicted_vuln'] == 1)).astype(int)
+df_exploded['TN'] = ((df_exploded['true_vuln'] == 0) & (df_exploded['predicted_vuln'] == 0)).astype(int)
+df_exploded['FP'] = ((df_exploded['true_vuln'] == 0) & (df_exploded['predicted_vuln'] == 1)).astype(int)
+df_exploded['FN'] = ((df_exploded['true_vuln'] == 1) & (df_exploded['predicted_vuln'] == 0)).astype(int)
+
+# Group by individual CWE and calculate TP, TN, FP, FN, and other metrics
 cwe_grouped = df_exploded.groupby('cwe').apply(lambda x: {
+    'TP': x['TP'].sum(),
+    'TN': x['TN'].sum(),
+    'FP': x['FP'].sum(),
+    'FN': x['FN'].sum(),
     'Accuracy': accuracy_score(x['true_vuln'], x['predicted_vuln']),
     'Precision': precision_score(x['true_vuln'], x['predicted_vuln'], zero_division=0),
     'Recall': recall_score(x['true_vuln'], x['predicted_vuln'], zero_division=0),
     'F1 Score': f1_score(x['true_vuln'], x['predicted_vuln'], zero_division=0),
     'AUC': auc(*roc_curve(x['true_vuln'], x['predicted_pos_confidence_normalized'])[0:2]),
     'Avg Confidence': x['predicted_confidence_normalized'].mean()
-}, include_groups=False).apply(pd.Series)
+}).apply(pd.Series)
 
-# Save grouped results as a CSV
-cwe_grouped.to_csv('results/classification_metrics_by_cwe.csv')
+# Reset the index to make 'cwe' a column and separate counts and scores
+cwe_grouped_reset = cwe_grouped.reset_index()
+
+# Separate the counts (TP, TN, FP, FN) into a new DataFrame
+counts_df = cwe_grouped_reset[['cwe', 'TP', 'TN', 'FP', 'FN']].melt(id_vars=['cwe'], var_name='Metric', value_name='Count')
+
+# Separate the other metrics (Accuracy, Precision, Recall, etc.) into another DataFrame
+metrics_df = cwe_grouped_reset[['cwe', 'Accuracy', 'Precision', 'Recall', 'F1 Score', 'AUC', 'Avg Confidence']].melt(id_vars=['cwe'], var_name='Metric', value_name='Score')
+
+# Concatenate the counts and metrics DataFrames
+summary_grouped_metrics = pd.concat([counts_df, metrics_df], ignore_index=True)
+
+# Save summary table to the results directory
+summary_grouped_metrics.to_csv('results/classification_summary_by_cwe.csv', index=False)
+
+# Plot and save the classification counts (TP, TN, FP, FN)
+# plt.figure(figsize=(8, 6))
+# sns.barplot(x='Metric', y='Count', data=cwe_grouped[['TP', 'TN']], palette='viridis')
+cwe_grouped[['TP', 'TN', 'FP', 'FN']].plot(kind='bar', figsize=(8, 6))
+plt.title('True Positive, True Negative, False Positive, False Negative Counts by CWE')
+plt.savefig('results/classification_counts_by_cwe.png')
+plt.show() if SHOW else None
+
+# Calculate the total number of samples in each CWE group
+cwe_grouped_reset['Total Samples'] = df_exploded.groupby('cwe').size().values
+
+# Calculate rates for each CWE group using the total number of samples in the denominator
+cwe_grouped_reset['True Positive Rate'] = cwe_grouped_reset['TP'] / cwe_grouped_reset['Total Samples']
+cwe_grouped_reset['True Negative Rate'] = cwe_grouped_reset['TN'] / cwe_grouped_reset['Total Samples']
+cwe_grouped_reset['False Positive Rate'] = cwe_grouped_reset['FP'] / cwe_grouped_reset['Total Samples']
+cwe_grouped_reset['False Negative Rate'] = cwe_grouped_reset['FN'] / cwe_grouped_reset['Total Samples']
+
+# Melt the rates into a long format
+rates_df_grouped = cwe_grouped_reset.melt(id_vars=['cwe'], 
+                                  value_vars=['True Positive Rate', 'True Negative Rate', 
+                                              'False Positive Rate', 'False Negative Rate'],
+                                  var_name='Metric', value_name='Rate')
+
+# Save the rates per CWE to the results directory
+rates_df_grouped.to_csv('results/classification_rates_by_cwe.csv', index=False)
+
+# TP/TN/FP/FN Rates Graph grouped by CWE
+plt.figure(figsize=(8, 6))  # Increase figure size for readability
+sns.barplot(x='cwe', y='Rate', hue='Metric', data=rates_df_grouped, palette='viridis', ci=None)
+plt.title('True Positive, True Negative, False Positive, False Negative Rates by CWE')
+plt.xlabel('CWE')
+plt.ylabel('Rate')
+plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
+plt.legend(title='Metric', bbox_to_anchor=(1.05, 1), loc='upper left')  # Adjust legend position
+plt.tight_layout()  # Adjust layout to prevent overlap
+plt.savefig('results/classification_rates_by_cwe.png')
+plt.show() if SHOW else None
 
 # Plot the results for grouped by CWE
-cwe_grouped.plot(kind='bar', figsize=(10, 6))
+cwe_grouped[['Accuracy', 'Precision', 'Recall', 'F1 Score', 'AUC', 'Avg Confidence']].plot(kind='bar', figsize=(8, 6))
 plt.title('Classification Metrics by CWE')
 plt.ylabel('Metric Value')
 plt.xticks(rotation=90)
@@ -175,5 +235,6 @@ plt.show() if SHOW else None
 # • Pair-wise Reversed Prediction (P-R): The model incorrectly
 # and inversely predicts the labels for the pair.
 
-pairwise_df = calculate_pairwise_outcomes(df)
+if os.getenv('DATA_SRC').upper() == 'PRIMEVUL':
+    pairwise_df = generate_outcome_graphs(df, SHOW)
 

@@ -89,10 +89,83 @@ def calculate_pairwise_outcomes(df):
     # Create a DataFrame from the outcomes
     return pd.DataFrame(outcomes)
 
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# # Load CSV into DataFrame, skipping the first row and stripping whitespace from headers
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+def generate_outcome_graphs(src_df, SHOW):
+    """
+    Generate bar graphs for counts and rates of outcomes, including grouping by CWE.
+    Even if some outcomes don't exist in the DataFrame, they will be displayed in the graph.
+    """
+    df = calculate_pairwise_outcomes(src_df)
+
+    # Define all possible outcomes to ensure they appear in the graph, even if missing in the DataFrame
+    all_outcomes = ['P-C', 'P-V', 'P-B', 'P-R']
+
+    # Step 1: Explode the CWE array into separate rows
+    df_exploded = df.explode('cwe')
+
+    # Step 2: Count total occurrences of each outcome, ensuring all outcomes are included
+    outcome_counts = df['outcome'].value_counts().reindex(all_outcomes, fill_value=0)
+
+    # Step 3: Calculate rates of each outcome
+    total_pairs = len(df)
+    outcome_rates = outcome_counts / total_pairs
+
+    # Step 4: Group counts and rates by CWE
+    cwe_outcome_counts = df_exploded.groupby(['cwe', 'outcome']).size().unstack(fill_value=0).reindex(columns=all_outcomes, fill_value=0)
+    cwe_outcome_rates = cwe_outcome_counts.div(cwe_outcome_counts.sum(axis=1), axis=0)
+
+    # Step 5: Generate Bar Graphs
+    # Count Bar Graph (overall)
+    plt.figure(figsize=(8, 6))
+    sns.barplot(x=outcome_counts.index, y=outcome_counts.values, palette='Set2')
+    plt.title("Counts of Outcomes")
+    plt.ylabel("Count")
+    plt.xlabel("Outcome")
+    plt.savefig('results/outcome_counts.png')
+    plt.show() if SHOW else None
+
+    # Rate Bar Graph (overall)
+    plt.figure(figsize=(8, 6))
+    sns.barplot(x=outcome_rates.index, y=outcome_rates.values, palette='Set2')
+    plt.title("Rates of Outcomes")
+    plt.ylabel("Rate")
+    plt.xlabel("Outcome")
+    plt.savefig('results/outcome_rates.png')
+    plt.show() if SHOW else None
+
+    # Grouped Count Bar Graph by CWE (bar clusters)
+    plt.figure(figsize=(8, 6))
+    cwe_outcome_counts.plot(kind='bar', ax=plt.gca(), width=0.8, position=0, colormap='viridis')
+    plt.title("Counts of Outcomes Grouped by CWE")
+    plt.ylabel("Count")
+    plt.xlabel("CWE")
+    plt.xticks(rotation=45)
+    plt.savefig('results/outcome_counts_by_cwe.png')
+    plt.show() if SHOW else None
+
+    # Grouped Rate Bar Graph by CWE (bar clusters)
+    plt.figure(figsize=(8, 6))
+    cwe_outcome_rates.plot(kind='bar', ax=plt.gca(), width=0.8, position=0, colormap='viridis')
+    plt.title("Rates of Outcomes Grouped by CWE")
+    plt.ylabel("Rate")
+    plt.xlabel("CWE")
+    plt.xticks(rotation=45)
+    plt.savefig('results/outcome_rates_by_cwe.png')
+    plt.show() if SHOW else None
+
+# import ast
+# # # Load CSV into DataFrame, skipping the first row and stripping whitespace from headers
 # file_path = 'outputs/verdicts.csv'  # Replace with your file path
 # df = pd.read_csv(file_path, header=0)
 # df.columns = df.columns.str.strip()  # Remove any leading/trailing whitespace
+# df['cwe'] = df['cwe'].apply(ast.literal_eval)
 # pairwise_df = calculate_pairwise_outcomes(df)
 # print(pairwise_df)
+# generate_outcome_graphs(pairwise_df)

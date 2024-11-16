@@ -24,3 +24,9 @@
 - [ ] Get data flow finalized by Thurs
 - [ ] Finish all data runs by middle of next week
 - [ ] Set limit on number of RAG calls
+
+- [ ] Fix counts and rate of outcomes, seems fishy
+- [ ] Fix classification counts by CWE
+- [ ] Add classification rates by CWE
+- [ ] Maybe redo rates? Out of total samples probably isn't best metric...
+- [ ] WTH is with the tabs in sample 195801

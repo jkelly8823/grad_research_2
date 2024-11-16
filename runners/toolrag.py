@@ -1,6 +1,7 @@
 import getpass
 import os
 import io
+import ast
 import operator
 import functools
 from dotenv import load_dotenv
@@ -318,7 +319,7 @@ graph = workflow.compile()
 # PROMPTS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-samples, convos = form_prompts(src='PRIMEVUL',prompt=START_PROMPT, limit=27, start_idx=195801)
+samples, convos = form_prompts(src=os.getenv('DATA_SRC').upper(),prompt=START_PROMPT, limit=os.getenv('SAMPLE_LIMIT'), start_idx=os.getenv('START_IDX'), cherrypick=ast.literal_eval(os.getenv('CHERRYPICK')))
 
 # print(convos)
 
