@@ -28,19 +28,20 @@ SAST_SYSTEM_PROMPT = ("You should run all relevent static analysis tools to prov
 
 SUMMARIZE_SYSTEM_PROMPT = "You should provide accurate summarizations of previously generated information for all other models to use."
 
-ANALYZE_SYSTEM_PROMPT = ("You should use the provided information to detect all potential vulnerabilties in the originally presented code sample."
+ANALYZE_SYSTEM_PROMPT = (" You are an experiment in the fields of cybersecurity and code analysis."
+                         " You should use the provided information to detect all potential vulnerabilties in the originally presented code sample."
                          " You may request additional information. You should avoid false positives and false negatives."
                          )
 
-HUMAN_SAST_SUMMARIZER = ("Please summarize all of the static analysis results from all of the previous tool runs."
+HUMAN_SAST_SUMMARIZER = ("Please summarize all of the static analysis results from each of the previous tool runs."
                          " Indicate which tools you are summarizing in your response."
+                         " Summarize the tool responses one by one to ensure correct labelling."
                          )
 
-HUMAN_ANALYZER_SUMMARIZER = ("Prepend your response with FINAL ANSWER. Follow this with VULNERABLE or SAFE depending on the results."
-                             " Immediately after, include a CONFIDENCE SCORE, with a score describing your certainty regarding"
+HUMAN_ANALYZER_SUMMARIZER = ("Prepend your response with 'FINAL ANSWER:'. Follow this with 'VULNERABLE' or 'SAFE' depending on the results."
+                             " Immediately after, include a 'CONFIDENCE SCORE:', with a score describing your certainty regarding"
                              " your analysis on a scale from 0 to 10. Do not base the vulnerable status and confidence on any remediation provided."
-                             " Carefully work through the provided information to ensure that your response is accurate. Be certain to distill the most"
-                             " recent evaluation from the given information."
+                             " If multiple analyses are in the results below, base your summary and verdict upon the most recent one."
                              " Please summarize the following results:"
                              "\n{results}"
                              )
@@ -48,14 +49,18 @@ HUMAN_ANALYZER_SUMMARIZER = ("Prepend your response with FINAL ANSWER. Follow th
 HUMAN_SUMMARIZER_ANALYZER = ("Please utilize the output of the summary to inform your analysis of the original code sample."
                     " Evaluate it for any vulnerabilities you can find while avoiding false positives."
                     " Intensively review all detections, reasoning through to ensure they are accurate."
+                    " Utilize the tool summaries to assist your analysis, but do not solely rely upon them."
+                    " Perform an additional step-by-step intense evaluation of code using your capabilities."
                     " If no true positive vulnerabilities are found respond NONE in your analysis description."
                     " You have access to a peer RAG agent. If you would like more basic information on a vulnerability,"
                     " then at the end of your response, respond with 'QNA:', then your list of questions. Your questions"
                     " should be at the very end of your message. Keep your questions as simple as possible, as you are"
                     " querying the Common Weakness Enumeration database. An example request would be to provide a" 
-                    " description or example of a specific type of vulnerability. When you have exhaustively reasoned through"
-                    " all existing vulnerabilities, and excluded all false postives, output your final revised analysis prepended by:"
-                    " FINAL ANALYSIS:"
+                    " description or example of a specific type of vulnerability. If you have no questions,"
+                    " end your response with 'END' instead. Please engage in at least one round of QNA. "
+                    " When you have exhaustively reasoned through all existing vulnerabilities, and excluded all false postives,"
+                    " output your final revised analysis prepended by: 'FINAL ANALYSIS:'."
+                    " Include a line stating 'VERDICT:', then 'VULNERABLE' or 'SAFE' based upon your results."
                     )
 
 HUMAN_RAG_ANALYZER = ("The answers to your questions are as follows:\n{results}\n\n"

@@ -26,12 +26,18 @@ def bryson_backlash_fixer(text):
     return text
 
 # Function to clean and parse the JSON data
-def get_bryson_data(file_path, limit, cherrypick):
+def get_bryson_data(file_path, limit, start_idx, cherrypick):
     with open(file_path, 'r') as file:
         data = json.load(file)
     parsed_data = []
     for item in data:
         idx = len(parsed_data)
+
+        if start_idx != -1 and start_idx != idx:
+            continue
+        elif start_idx != -1 and start_idx == idx:
+            start_idx = -1
+
         if len(cherrypick) > 0 and idx not in cherrypick:
             continue
 
@@ -46,7 +52,8 @@ def get_bryson_data(file_path, limit, cherrypick):
                 "source": 'bryson_dataset',
                 "idx": idx,
                 "func": json_object['code'],
-                "vuln": 1
+                "vuln": 1,
+                "cwe": json_object.get('cwe', [])
             }
 
             if over_tokens(dat['func']):
@@ -63,13 +70,18 @@ def get_bryson_data(file_path, limit, cherrypick):
     return parsed_data
 
 
-def get_primevul_data(file_path, limit, cherrypick):
+def get_primevul_data(file_path, limit, start_idx, cherrypick):
     parsed_data = []
     
     with open(file_path, "r") as f:
         samples = f.readlines()
     samples = [json.loads(sample) for sample in samples]
     for sample in samples:
+        if start_idx != -1 and start_idx != sample["idx"]:
+            continue
+        elif start_idx != -1 and start_idx == sample["idx"]:
+            start_idx = -1
+
         if len(cherrypick) > 0 and sample["idx"] not in cherrypick:
             continue
 
@@ -78,7 +90,8 @@ def get_primevul_data(file_path, limit, cherrypick):
             "source": src,
             "idx": sample["idx"],
             "func": sample["func"],
-            "vuln": sample["target"]
+            "vuln": sample["target"],
+            "cwe": sample.get('cwe', [])
         }
 
         if over_tokens(dat['func']):
@@ -100,8 +113,8 @@ def get_primevul_data(file_path, limit, cherrypick):
 import dotenv
 dotenv.load_dotenv()
 
-prime_ids = [194994, 218852, 194996, 218933]
-primes = get_primevul_data(os.getenv('PRIMEVUL'), -1, prime_ids)
+prime_ids = [219912]
+primes = get_primevul_data(os.getenv('PRIMEVUL'), limit=-1, start_idx=-1, cherrypick=prime_ids)
 
 for dat in primes:
     sample = dat['func']

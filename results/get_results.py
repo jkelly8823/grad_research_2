@@ -4,6 +4,9 @@ import seaborn as sns
 from sklearn.metrics import f1_score, roc_curve, auc, accuracy_score, precision_score, recall_score
 import ast
 
+# Custom
+from primevul_wrangler import *
+
 # Show Plots
 SHOW = False
 
@@ -158,3 +161,19 @@ plt.title('Receiver Operating Characteristic (ROC) Curve by CWE')
 plt.legend(loc="lower right")
 plt.savefig('results/roc_curve_by_cwe.png')
 plt.show() if SHOW else None
+
+# ------------------------
+# PrimeVul Pairings
+# ------------------------
+# Direct from PrimeVul-
+# We define four outcomes of the pair-wise prediction:
+# • Pair-wise Correct Prediction (P-C): The model correctly
+# predicts the ground-truth labels for both elements of a pair.
+# • Pair-wise Vulnerable Prediction (P-V): The model incorrectly predicts both elements of the pair as vulnerable.
+# • Pair-wise Benign Prediction (P-B): The model incorrectly
+# predicts both elements of the pair as benign.
+# • Pair-wise Reversed Prediction (P-R): The model incorrectly
+# and inversely predicts the labels for the pair.
+
+pairwise_df = calculate_pairwise_outcomes(df)
+

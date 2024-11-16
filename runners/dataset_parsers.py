@@ -26,12 +26,18 @@ def bryson_backlash_fixer(text):
     return text
 
 # Function to clean and parse the JSON data
-def get_bryson_data(file_path, limit, cherrypick):
+def get_bryson_data(file_path, limit, start_idx, cherrypick):
     with open(file_path, 'r') as file:
         data = json.load(file)
     parsed_data = []
     for item in data:
         idx = len(parsed_data)
+
+        if start_idx != -1 and start_idx != idx:
+            continue
+        elif start_idx != -1 and start_idx == idx:
+            start_idx = -1
+
         if len(cherrypick) > 0 and idx not in cherrypick:
             continue
 
@@ -64,13 +70,18 @@ def get_bryson_data(file_path, limit, cherrypick):
     return parsed_data
 
 
-def get_primevul_data(file_path, limit, cherrypick):
+def get_primevul_data(file_path, limit, start_idx, cherrypick):
     parsed_data = []
     
     with open(file_path, "r") as f:
         samples = f.readlines()
     samples = [json.loads(sample) for sample in samples]
     for sample in samples:
+        if start_idx != -1 and start_idx != sample["idx"]:
+            continue
+        elif start_idx != -1 and start_idx == sample["idx"]:
+            start_idx = -1
+
         if len(cherrypick) > 0 and sample["idx"] not in cherrypick:
             continue
 

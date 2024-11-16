@@ -125,9 +125,9 @@ def go_semgrep(code_sample: str, file_suffix: str) -> str:
         # Run semgrep on the temporary file, capturing the output
         result = subprocess.run(
             # Submit Scan Online too, use online ruleset
-            # ["docker", "run", "-e", f"SEMGREP_APP_TOKEN={os.getenv('SEMGREP_APP_TOKEN')}", "--rm", "-v", "D:/grad_research_2:/src", "semgrep/semgrep", "semgrep", "ci", "--quiet", "--subdir", "datasets/tst"],
+            # ["docker", "run", "-e", f"SEMGREP_APP_TOKEN={os.getenv('SEMGREP_APP_TOKEN')}", "--rm", "-v", "D:/grad_research_2:/src", "semgrep/semgrep", "semgrep", "ci", "--quiet", "--subdir", temp_file_path],
             # Local only, use local ruleset (?)
-            ["docker", "run", "-e", f"SEMGREP_APP_TOKEN={os.getenv('SEMGREP_APP_TOKEN')}", "--rm", "-v", "D:/grad_research_2:/src", "semgrep/semgrep", "semgrep", "scan", "--config=r/all", "--quiet", "datasets/tst"],
+            ["docker", "run", "-e", f"SEMGREP_APP_TOKEN={os.getenv('SEMGREP_APP_TOKEN')}", "--rm", "-v", "D:/grad_research_2:/src", "semgrep/semgrep", "semgrep", "scan", "--config=r/all", "--quiet", temp_file_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,

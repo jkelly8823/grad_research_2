@@ -318,7 +318,7 @@ graph = workflow.compile()
 # PROMPTS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-samples, convos = form_prompts('PRIMEVUL',START_PROMPT, 150)
+samples, convos = form_prompts(src='PRIMEVUL',prompt=START_PROMPT, limit=27, start_idx=195801)
 
 # print(convos)
 
