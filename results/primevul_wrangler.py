@@ -13,40 +13,35 @@ def get_primevul_pairs(idxs):
         samples = f.readlines()
     samples = [json.loads(sample) for sample in samples]
 
-    print(len(samples))
-    print(len(idxs))
-
     # Step 1: Group relevant idx values by commit_url and file_name
     alpha_groups = defaultdict(list)
     for sample in samples:
         sample_idx = sample.get("idx")
         if sample_idx in idxs:  # Only consider idxs in the provided list
-            key = (sample.get("commit_url", None), sample.get("file_name", None))
+            key = (sample.get("commit_url", None),None)
             alpha_groups[key].append(sample_idx)
 
-    print(len(alpha_groups))
     rem_list = []
+    fixed = {}
     for key, sublist in alpha_groups.items():
         if len(sublist) > 2:
+            # print(key)
             print(sublist)
+            for i in range(0, len(sublist)//2):
+                while True:
+                    pair = input("Enter a pair of IDs separated by a comma: ")
+                    split_pair = list(map(lambda x: int(x.strip()), pair.split(',')))
+                    if len(split_pair) > 2:
+                        print("Entry contains too many values. Please enter the IDs in pairs.")
+                    else:
+                        break
+                fixed[(key[0], key[1] or i)] = split_pair
             rem_list.append(key)
     for key in rem_list:
         del alpha_groups[key]
-    
-    # Step 2: Identify pairs of idx values
-    pairs = []
-    non_paired = []
-    for group in alpha_groups.values():
-        if len(group) > 1:  # Only consider groups with more than one idx
-            pairs.extend([(group[i], group[j]) for i in range(len(group)) for j in range(i + 1, len(group))])
-        else:
-            non_paired.append(group)
+    alpha_groups.update(fixed)
 
-    print()
-
-    # print("Pairs of idx values sharing the same alpha (filtered by idxs):")
-    # print(pairs)
-    return pairs
+    return alpha_groups.values()
 
 def calculate_pairwise_outcomes(df):
     """
@@ -81,14 +76,25 @@ def calculate_pairwise_outcomes(df):
         # Determine the outcome for the pair
         if true_vuln_1 == pred_vuln_1 and true_vuln_2 == pred_vuln_2:
             outcome = 'P-C'  # Pair-wise Correct Prediction
-        elif true_vuln_1 != pred_vuln_1 and true_vuln_2 != pred_vuln_2:
-            if true_vuln_1 == true_vuln_2:
+        elif (true_vuln_1 == pred_vuln_2) and (true_vuln_2 == pred_vuln_1):
+            outcome = 'P-R'  # Pair-wise Reversed Prediction
+        elif (true_vuln_1 != pred_vuln_1 or true_vuln_2 != pred_vuln_2) and (pred_vuln_1 == pred_vuln_2):
+            if pred_vuln_1 == 0:
                 outcome = 'P-B'  # Pair-wise Benign Prediction
             else:
                 outcome = 'P-V'  # Pair-wise Vulnerable Prediction
-        elif (true_vuln_1 == pred_vuln_2) and (true_vuln_2 == pred_vuln_1):
-            outcome = 'P-R'  # Pair-wise Reversed Prediction
         else:
+            print({
+            'idx1': idx1,
+            'idx2': idx2,
+            'true_vuln_1': true_vuln_1,
+            'pred_vuln_1': pred_vuln_1,
+            'true_vuln_2': true_vuln_2,
+            'pred_vuln_2': pred_vuln_2,
+            'outcome': "FAILURE",
+            'cwe': cwe
+        })
+            
             continue  # If no match, skip (although shouldn't happen with proper pairs)
 
         # Append the result

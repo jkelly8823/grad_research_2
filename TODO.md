@@ -23,11 +23,14 @@
 - [ ] Write methods section by mid next week
 - [ ] Get data flow finalized by Thurs
 - [ ] Finish all data runs by middle of next week
-- [ ] Set limit on number of RAG calls
+- [X] Set limit on number of RAG calls
 
-- [ ] Fix counts and rate of outcomes, seems fishy
-- [ ] WHY THE OUTCOMES PAIR SO FEW? ONLY 19 vs 124 total samples????
+- [X] Fix counts and rate of outcomes, seems fishy
+- [X] WHY THE OUTCOMES PAIR SO FEW? ONLY 19 vs 124 total samples????
 - [X] Fix classification counts by CWE
 - [X] Add classification rates by CWE
 - [X] Maybe redo rates? Out of total samples probably isn't best metric...
 - [ ] WTH is with the tabs in sample 195801
+
+- [ ] Create a filtered subset of primevul for samples we actually care about
+    - [ ] Buffer overflow, Write/read outside of buffer, null ptr dereference, etc.

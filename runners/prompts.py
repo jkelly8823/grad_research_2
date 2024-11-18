@@ -28,7 +28,7 @@ SAST_SYSTEM_PROMPT = ("You should run all relevent static analysis tools to prov
 
 SUMMARIZE_SYSTEM_PROMPT = "You should provide accurate summarizations of previously generated information for all other models to use."
 
-ANALYZE_SYSTEM_PROMPT = (" You are an experiment in the fields of cybersecurity and code analysis."
+ANALYZE_SYSTEM_PROMPT = (" You are an expert in the fields of cybersecurity and code analysis."
                          " You should use the provided information to detect all potential vulnerabilties in the originally presented code sample."
                          " You may request additional information. You should avoid false positives and false negatives."
                          )
