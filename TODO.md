@@ -32,5 +32,5 @@
 - [X] Maybe redo rates? Out of total samples probably isn't best metric...
 - [ ] WTH is with the tabs in sample 195801
 
-- [ ] Create a filtered subset of primevul for samples we actually care about
+- [X] Create a filtered subset of primevul for samples we actually care about
     - [ ] Buffer overflow, Write/read outside of buffer, null ptr dereference, etc.

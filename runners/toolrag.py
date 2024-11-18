@@ -23,6 +23,7 @@ from sasts import *
 from prompts import *
 from prompters import *
 from rag import rag_graph
+from get_results import getResults
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # LOGIN
@@ -425,3 +426,5 @@ for i in range(0,len(convos)):
         
         # Write data line to the file
         f3.write(",".join(map(str, line)) + '\n')
+    
+getResults()

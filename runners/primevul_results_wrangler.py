@@ -112,14 +112,14 @@ def calculate_pairwise_outcomes(df):
     # Create a DataFrame from the outcomes
     return pd.DataFrame(outcomes)
 
-def generate_outcome_graphs(src_df, SHOW):
+def generate_outcome_graphs(src_df, SHOW, ROOT_PTH):
     """
     Generate bar graphs for counts and rates of outcomes, including grouping by CWE.
     Even if some outcomes don't exist in the DataFrame, they will be displayed in the graph.
     """
     df = calculate_pairwise_outcomes(src_df)
     # Sum four specific columns and store the result in a new column
-    df.to_csv('results/outcomes_paired.csv', index=False)
+    df.to_csv(ROOT_PTH + '/outcomes_paired.csv', index=False)
 
     # Define all possible outcomes to ensure they appear in the graph, even if missing in the DataFrame
     all_outcomes = ['P-C', 'P-V', 'P-B', 'P-R']
@@ -130,7 +130,7 @@ def generate_outcome_graphs(src_df, SHOW):
     # Step 2: Count total occurrences of each outcome, ensuring all outcomes are included
     outcome_counts = df['outcome'].value_counts().reindex(all_outcomes, fill_value=0).reset_index()
     outcome_counts.columns = ['Outcome', 'Count']
-    outcome_counts.to_csv('results/outcome_counts.csv', index=False)
+    outcome_counts.to_csv(ROOT_PTH + '/outcome_counts.csv', index=False)
 
     # Step 3: Calculate rates of each outcome
     total_pairs = len(df)
@@ -139,7 +139,7 @@ def generate_outcome_graphs(src_df, SHOW):
 
     # Save outcome rates to CSV
     outcome_rates = outcome_rates[['Outcome', 'Rate']]
-    outcome_rates.to_csv('results/outcome_rates.csv', index=False)
+    outcome_rates.to_csv(ROOT_PTH + '/outcome_rates.csv', index=False)
 
     # Step 4: Group counts and rates by CWE
     # Group counts by 'cwe' and 'outcome', ensure all outcomes are included
@@ -154,14 +154,14 @@ def generate_outcome_graphs(src_df, SHOW):
     cwe_outcome_counts = cwe_outcome_counts.reset_index()
 
     # Save the counts to CSV
-    cwe_outcome_counts.to_csv('results/outcome_counts_by_cwe.csv', index=False)
+    cwe_outcome_counts.to_csv(ROOT_PTH + '/outcome_counts_by_cwe.csv', index=False)
 
     # Calculate rates by dividing each count by the total per CWE
     cwe_outcome_rates = cwe_outcome_counts.set_index('cwe')
     cwe_outcome_rates = cwe_outcome_rates.div(cwe_outcome_rates.sum(axis=1), axis=0).reset_index()
 
     # Save the rates to CSV
-    cwe_outcome_rates.to_csv('results/outcome_rates_by_cwe.csv', index=False)
+    cwe_outcome_rates.to_csv(ROOT_PTH + '/outcome_rates_by_cwe.csv', index=False)
 
 
     # Step 5: Generate Bar Graphs
@@ -171,7 +171,7 @@ def generate_outcome_graphs(src_df, SHOW):
     plt.title("Counts of Outcomes")
     plt.ylabel("Count")
     plt.xlabel("Outcome")
-    plt.savefig('results/outcome_counts.png')
+    plt.savefig(ROOT_PTH + '/outcome_counts.png')
     plt.show() if SHOW else None
 
     # Rate Bar Graph (overall)
@@ -180,7 +180,7 @@ def generate_outcome_graphs(src_df, SHOW):
     plt.title("Rates of Outcomes")
     plt.ylabel("Rate")
     plt.xlabel("Outcome")
-    plt.savefig('results/outcome_rates.png')
+    plt.savefig(ROOT_PTH + '/outcome_rates.png')
     plt.show() if SHOW else None
 
     # Outcome Counts Grouped by CWE
@@ -199,7 +199,7 @@ def generate_outcome_graphs(src_df, SHOW):
     plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
     plt.legend(title='Outcome', bbox_to_anchor=(1.05, 1), loc='upper left')  # Adjust legend position
     plt.tight_layout()  # Adjust layout to prevent overlap
-    plt.savefig('results/outcome_counts_by_cwe.png')
+    plt.savefig(ROOT_PTH + '/outcome_counts_by_cwe.png')
     plt.show() if SHOW else None
 
 
@@ -219,7 +219,7 @@ def generate_outcome_graphs(src_df, SHOW):
     plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
     plt.legend(title='Outcome', bbox_to_anchor=(1.05, 1), loc='upper left')  # Adjust legend position
     plt.tight_layout()  # Adjust layout to prevent overlap
-    plt.savefig('results/outcome_rates_by_cwe.png')
+    plt.savefig(ROOT_PTH + '/outcome_rates_by_cwe.png')
     plt.show() if SHOW else None
 
 # import ast

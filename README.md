@@ -28,7 +28,7 @@ The project integrates with Semgrep for static analysis, requiring the following
 
 - **Semgrep App Token**: `SEMGREP_APP_TOKEN`
 
-### RAG Knowledge Base and Output Paths
+### RAG Knowledge Base
 
 The project also allows configuration of paths for data sources and outputs:
 
@@ -36,7 +36,13 @@ The project also allows configuration of paths for data sources and outputs:
 - **RAG Knowledge Base Directory**: `RAG_PERSIST` – Directory to persist RAG knowledge base.
 - **Recursion Limit for RAG**: `RAG_RECURSION_LIMIT` - Subgraph internal recursion limit
 - **Call Limit for RAG**: `RAG_CALL_LIMIT` - Subgraph call limit
-- **Output Path**: `OUTPUT_PTH` – Directory to save run outputs.
+
+### Paths
+
+- **Output Path**: `OUTPUT_PTH` – Directory to save run outputs (txt files and csv of verdicts).
+- **Result Path**: `RESULT_PTH` – Directory to save parsed run results (csv and png files with some analysis).
+- **BRYSON**: `BRYSON` - Path to file for Bryson's dataset
+- **PRIMEVUL** `PRIMEVUL` - Path to file for Primevul dataset
 
 ### Model Source and Model Names
 
@@ -49,11 +55,18 @@ Specify the model source and particular models for various functionalities:
 - **Analysis Model**: `SRC_ANALYSIS_MODEL`
 - **RAG Model**: `SRC_RAG_MODEL`
 
-### Token Limits
+### General Settings
 
-Specify the maximum accepted token length for code samples
+- **Sourcecode Token Limit**: `SAMPLE_TOKEN_LIMIT` - Specify the maximum accepted token length for code samples
+- **Data Source**: `DATA_SRC` - (PRIMEVUL, BRYSON) for which dataset to use
+- **Sample Limit**: `SAMPLE_LIMIT` - How many samples to run against, -1 for all
 
-- **SAMPLE_TOKEN_LIMIT**: `TOKEN_LIMIT`
+### Additional Settings
+
+- **Verbosity**: `VERBOSE` - (0,1) Whether to print step outputs of ToolRAG to console
+- **Show Graphs**: `SHOW` - (0,1) Whether to display graphs when they are created
+- **Start Index**: `START_IDX` - Index of the sample to start from, continues onwards in file from there
+- **Cherrypicked Samples**: `CHERRYPICK` - ([]) Array of integers representing sample indexes to utilize
 
 ## Setting Up the Environment
 
@@ -97,6 +110,7 @@ The configuration includes settings for constructing a RAG knowledge base from a
 
 ### Troubleshooting
 If you encounter issues:
+- **Clean/Purge Docker Data**: On Windows, the mounts sometimes go stale
 - **Check API Key Validity**: Ensure that all API keys are up to date and have sufficient permissions.
 - **Verify Paths**: Double-check that all paths in the .env file point to the correct files and directories.
 - **Contact Support**: For further assistance, refer to the project’s issue tracker or support channels, or reach out to the author.
