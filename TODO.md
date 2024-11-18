@@ -26,7 +26,8 @@
 - [ ] Set limit on number of RAG calls
 
 - [ ] Fix counts and rate of outcomes, seems fishy
-- [ ] Fix classification counts by CWE
-- [ ] Add classification rates by CWE
-- [ ] Maybe redo rates? Out of total samples probably isn't best metric...
+- [ ] WHY THE OUTCOMES PAIR SO FEW? ONLY 19 vs 124 total samples????
+- [X] Fix classification counts by CWE
+- [X] Add classification rates by CWE
+- [X] Maybe redo rates? Out of total samples probably isn't best metric...
 - [ ] WTH is with the tabs in sample 195801
