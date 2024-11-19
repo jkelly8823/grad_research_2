@@ -1,0 +1,55 @@
+cwe,Metric,Score
+CWE-119,Accuracy,1.0
+CWE-121,Accuracy,1.0
+CWE-122,Accuracy,1.0
+CWE-190,Accuracy,1.0
+CWE-362,Accuracy,0.8
+CWE-401,Accuracy,1.0
+CWE-415,Accuracy,1.0
+CWE-416,Accuracy,1.0
+CWE-77,Accuracy,1.0
+CWE-119,Precision,1.0
+CWE-121,Precision,1.0
+CWE-122,Precision,1.0
+CWE-190,Precision,1.0
+CWE-362,Precision,1.0
+CWE-401,Precision,1.0
+CWE-415,Precision,1.0
+CWE-416,Precision,1.0
+CWE-77,Precision,1.0
+CWE-119,Recall,1.0
+CWE-121,Recall,1.0
+CWE-122,Recall,1.0
+CWE-190,Recall,1.0
+CWE-362,Recall,0.8
+CWE-401,Recall,1.0
+CWE-415,Recall,1.0
+CWE-416,Recall,1.0
+CWE-77,Recall,1.0
+CWE-119,F1 Score,1.0
+CWE-121,F1 Score,1.0
+CWE-122,F1 Score,1.0
+CWE-190,F1 Score,1.0
+CWE-362,F1 Score,0.8888888888888888
+CWE-401,F1 Score,1.0
+CWE-415,F1 Score,1.0
+CWE-416,F1 Score,1.0
+CWE-77,F1 Score,1.0
+CWE-119,AUC,
+CWE-121,AUC,
+CWE-122,AUC,
+CWE-190,AUC,
+CWE-362,AUC,
+CWE-401,AUC,
+CWE-415,AUC,
+CWE-416,AUC,
+CWE-77,AUC,
+CWE-119,Avg Confidence,0.8933333333333334
+CWE-121,Avg Confidence,0.9
+CWE-122,Avg Confidence,0.9000000000000001
+CWE-190,Avg Confidence,0.9000000000000001
+CWE-362,Avg Confidence,0.8866666666666667
+CWE-401,Avg Confidence,0.8800000000000002
+CWE-415,Avg Confidence,0.8933333333333334
+CWE-416,Avg Confidence,0.8933333333333334
+CWE-77,Avg Confidence,0.9000000000000001

@@ -75,10 +75,10 @@ def getResults():
 
     # Define rates and their formulas
     rates = {
-        'True Positive Rate': counts_idx['TP'] / (counts_idx['TP'] + counts_idx['FN']),
-        'True Negative Rate': counts_idx['TN'] / (counts_idx['TN'] + counts_idx['FP']),
-        'False Positive Rate': counts_idx['FP'] / (counts_idx['FP'] + counts_idx['TN']),
-        'False Negative Rate': counts_idx['FN'] / (counts_idx['FN'] + counts_idx['TP'])
+        'True Positive Rate': counts_idx['TP'] / max((counts_idx['TP'] + counts_idx['FN']),1),
+        'True Negative Rate': counts_idx['TN'] / max((counts_idx['TN'] + counts_idx['FP']),1),
+        'False Positive Rate': counts_idx['FP'] / max((counts_idx['FP'] + counts_idx['TN']),1),
+        'False Negative Rate': counts_idx['FN'] / max((counts_idx['FN'] + counts_idx['TP']),1)
     }
     rates_df = pd.DataFrame(rates.items(), columns=['Metric', 'Rate'])
     rates_df.to_csv(ROOT_PTH + '/classification_rates.csv', index=False)
@@ -166,10 +166,10 @@ def getResults():
     plt.show() if SHOW else None
 
     # Calculate rates for each CWE group using the sum of TP, TN, FP, FN as the denominator
-    cwe_grouped_reset['True Positive Rate'] = cwe_grouped_reset['TP'] / (cwe_grouped_reset[['TP', 'FN']].sum(axis=1))
-    cwe_grouped_reset['True Negative Rate'] = cwe_grouped_reset['TN'] / (cwe_grouped_reset[['TN', 'FP']].sum(axis=1))
-    cwe_grouped_reset['False Positive Rate'] = cwe_grouped_reset['FP'] / (cwe_grouped_reset[['FP', 'TN']].sum(axis=1))
-    cwe_grouped_reset['False Negative Rate'] = cwe_grouped_reset['FN'] / (cwe_grouped_reset[['FN', 'TP']].sum(axis=1))
+    cwe_grouped_reset['True Positive Rate'] = cwe_grouped_reset['TP'] / (cwe_grouped_reset[['TP', 'FN']].sum(axis=1).replace(0, 1))
+    cwe_grouped_reset['True Negative Rate'] = cwe_grouped_reset['TN'] / (cwe_grouped_reset[['TN', 'FP']].sum(axis=1).replace(0, 1))
+    cwe_grouped_reset['False Positive Rate'] = cwe_grouped_reset['FP'] / (cwe_grouped_reset[['FP', 'TN']].sum(axis=1).replace(0, 1))
+    cwe_grouped_reset['False Negative Rate'] = cwe_grouped_reset['FN'] / (cwe_grouped_reset[['FN', 'TP']].sum(axis=1).replace(0, 1))
 
     # Melt the rates into a long format
     rates_df_grouped = cwe_grouped_reset.melt(id_vars=['cwe'], 

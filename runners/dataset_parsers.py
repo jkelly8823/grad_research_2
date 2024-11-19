@@ -2,6 +2,9 @@ import json
 import re
 import os
 import tiktoken
+import ast
+from dotenv import load_dotenv
+load_dotenv()
 
 def over_tokens(sample):
     max_tokens = int(os.getenv('SAMPLE_TOKEN_LIMIT'))
@@ -26,7 +29,7 @@ def bryson_backlash_fixer(text):
     return text
 
 # Function to clean and parse the JSON data
-def get_bryson_data(file_path, limit, start_idx, cherrypick, cherryskip):
+def get_bryson_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherryskip=[]):
     with open(file_path, 'r') as file:
         data = json.load(file)
     parsed_data = []
@@ -41,7 +44,7 @@ def get_bryson_data(file_path, limit, start_idx, cherrypick, cherryskip):
         if len(cherrypick) > 0 and idx not in cherrypick:
             continue
 
-        if len(cherryskip) > 0 and sample["idx"] in cherryskip:
+        if len(cherryskip) > 0 and idx in cherryskip:
             continue
 
         try:
@@ -72,8 +75,69 @@ def get_bryson_data(file_path, limit, start_idx, cherrypick, cherryskip):
             break
     return parsed_data
 
+# Function to clean and parse the JSON data
+def get_brysonfixed_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherryskip=[]):
+    cwe_mapping = {
+                    'stack-based buffer overflow': ['CWE-121'],
+                    'heap-based buffer overflow': ['CWE-122'],
+                    'use after free': ['CWE-416'],
+                    'integer overflow': ['CWE-190'],
+                    'race condition': ['CWE-362'],
+                    'command injection': ['CWE-77'],
+                    'out-of-bounds access': ['CWE-119'], # ?
+                    'memory leak': ['CWE-401'],
+                    'double free': ['CWE-415']
+                }
 
-def get_primevul_data(file_path, limit, start_idx, cherrypick, cherryskip):
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+    parsed_data = []
+    for item in data:
+        idx = len(parsed_data)
+
+        if start_idx != -1 and start_idx != idx:
+            continue
+        elif start_idx != -1 and start_idx == idx:
+            start_idx = -1
+
+        if len(cherrypick) > 0 and idx not in cherrypick:
+            continue
+
+        if len(cherryskip) > 0 and idx in cherryskip:
+            continue
+
+        try:
+            # Decode the escaped string (removes unnecessary escape characters)
+            cleaned_code = bytes(item['code'], "utf-8").decode("unicode_escape")
+            
+            # Further clean up additional escape sequences like backslashes or newlines
+            cleaned_code = cleaned_code.replace("\\\\", "\\").replace("\\n", "\n").replace('\\"', '"')
+        
+            # Update the 'code' field with the cleaned string
+            item['code'] = cleaned_code
+
+            dat = {
+                "source": 'bryson_dataset',
+                "idx": idx,
+                "func": item['code'],
+                "vuln": item['vulnerable'],
+                "cwe": cwe_mapping.get(item['category'].lower(),['Unknown CWE'])
+            }
+
+            if over_tokens(dat['func']):
+                print('Skipping a sample due to token length...')
+                continue
+
+            parsed_data.append(dat)
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON: {e}")
+        
+        limit -= 1
+        if limit == 0:
+            break
+    return parsed_data
+
+def get_primevul_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherryskip=[]):
     parsed_data = []
     with open(file_path, "r") as f:
         samples = f.readlines()
@@ -109,3 +173,31 @@ def get_primevul_data(file_path, limit, start_idx, cherrypick, cherryskip):
         if limit == 0:
             break
     return parsed_data
+
+if __name__ == '__main__':
+    if os.getenv('DATA_SRC').upper() == 'BRYSON':
+        parsed = get_bryson_data(
+            file_path=os.getenv('BRYSON'),
+            limit=int(os.getenv('SAMPLE_LIMIT')),
+            start_idx=int(os.getenv('START_IDX')),
+            cherrypick=ast.literal_eval(os.getenv('CHERRYPICK')),
+            cherryskip=ast.literal_eval(os.getenv('CHERRYSKIP'))
+        )
+    elif os.getenv('DATA_SRC').upper() == 'BRYSONFIXED':
+        parsed = get_brysonfixed_data(
+            file_path=os.getenv('BRYSONFIXED'),
+            limit=int(os.getenv('SAMPLE_LIMIT')),
+            start_idx=int(os.getenv('START_IDX')),
+            cherrypick=ast.literal_eval(os.getenv('CHERRYPICK')),
+            cherryskip=ast.literal_eval(os.getenv('CHERRYSKIP'))
+        )
+    elif os.getenv('DATA_SRC').upper() == 'PRIMEVUL':
+        parsed = get_primevul_data(
+            file_path=os.getenv('PRIMEVUL'),
+            limit=int(os.getenv('SAMPLE_LIMIT')),
+            start_idx=int(os.getenv('START_IDX')),
+            cherrypick=ast.literal_eval(os.getenv('CHERRYPICK')),
+            cherryskip=ast.literal_eval(os.getenv('CHERRYSKIP'))
+        )
+    for elem in parsed:
+        print(elem)
