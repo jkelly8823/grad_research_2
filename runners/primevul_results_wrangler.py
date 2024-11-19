@@ -21,24 +21,68 @@ def get_primevul_pairs(idxs):
             key = (sample.get("commit_url", None),None)
             alpha_groups[key].append(sample_idx)
 
-    rem_list = []
+    unpaired = {}
     fixed = {}
+    rem_keys = []
     for key, sublist in alpha_groups.items():
         if len(sublist) > 2:
-            # print(key)
+            rem_keys.append(key)
+            print("\nToo many values in this group!")
             print(sublist)
+            fixed_ids = []
             for i in range(0, len(sublist)//2):
                 while True:
                     pair = input("Enter a pair of IDs separated by a comma: ")
                     split_pair = list(map(lambda x: int(x.strip()), pair.split(',')))
                     if len(split_pair) > 2:
                         print("Entry contains too many values. Please enter the IDs in pairs.")
+                    elif split_pair[0] not in sublist or split_pair[1] not in sublist:
+                        print("Invalid IDs entered, please try again.")
+                    elif split_pair[0] in fixed_ids or split_pair[1] in fixed_ids:
+                        print('At least one of these IDs have already been paired, please try again.')
                     else:
                         break
                 fixed[(key[0], key[1] or i)] = split_pair
-            rem_list.append(key)
-    for key in rem_list:
+                fixed_ids.extend(split_pair)
+            if len(sublist)%2 != 0:
+                for val in sublist:
+                    if val not in fixed_ids:
+                        unpaired[val] = key
+        elif len(sublist) < 2:
+            rem_keys.append(key)
+            for val in sublist:
+                unpaired[val] = key
+    
+    isNone = False
+    while len(unpaired) > 0:
+        print("\nUNPAIRED:")
+        valid_ids = []
+        for id, key in unpaired.items():
+            print(key, id) 
+            valid_ids.append(id)
+
+        while True:
+            pair = input("Enter a pair of IDs separated by a comma, or -1 if no pairs exist: ")
+            split_pair = list(map(lambda x: int(x.strip()), pair.split(',')))
+            if split_pair[0] == -1:
+                isNone = True
+                break
+            if len(split_pair) > 2:
+                print("Entry contains too many values. Please enter the IDs in pairs.")
+            elif split_pair[0] not in valid_ids or split_pair[1] not in valid_ids:
+                print("Invalid IDs entered, please try again.")
+            else:
+                break
+        if isNone:
+            break
+        else:
+            fixed[(unpaired[split_pair[0]],unpaired[split_pair[1]])] = split_pair
+            del unpaired[split_pair[0]]
+            del unpaired[split_pair[1]]
+
+    for key in rem_keys:
         del alpha_groups[key]
+
     alpha_groups.update(fixed)
 
     return alpha_groups.values()

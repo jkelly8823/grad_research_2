@@ -26,7 +26,7 @@ def bryson_backlash_fixer(text):
     return text
 
 # Function to clean and parse the JSON data
-def get_bryson_data(file_path, limit, start_idx, cherrypick):
+def get_bryson_data(file_path, limit, start_idx, cherrypick, cherryskip):
     with open(file_path, 'r') as file:
         data = json.load(file)
     parsed_data = []
@@ -39,6 +39,9 @@ def get_bryson_data(file_path, limit, start_idx, cherrypick):
             start_idx = -1
 
         if len(cherrypick) > 0 and idx not in cherrypick:
+            continue
+
+        if len(cherryskip) > 0 and sample["idx"] in cherryskip:
             continue
 
         try:
@@ -70,9 +73,8 @@ def get_bryson_data(file_path, limit, start_idx, cherrypick):
     return parsed_data
 
 
-def get_primevul_data(file_path, limit, start_idx, cherrypick):
+def get_primevul_data(file_path, limit, start_idx, cherrypick, cherryskip):
     parsed_data = []
-    
     with open(file_path, "r") as f:
         samples = f.readlines()
     samples = [json.loads(sample) for sample in samples]
@@ -83,6 +85,9 @@ def get_primevul_data(file_path, limit, start_idx, cherrypick):
             start_idx = -1
 
         if len(cherrypick) > 0 and sample["idx"] not in cherrypick:
+            continue
+            
+        if len(cherryskip) > 0 and sample["idx"] in cherryskip:
             continue
 
         src = f'primevul_{sample["project"]}_{sample["commit_id"]}'

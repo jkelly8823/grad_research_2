@@ -66,7 +66,8 @@ Specify the model source and particular models for various functionalities:
 - **Verbosity**: `VERBOSE` - (0,1) Whether to print step outputs of ToolRAG to console
 - **Show Graphs**: `SHOW` - (0,1) Whether to display graphs when they are created
 - **Start Index**: `START_IDX` - Index of the sample to start from, continues onwards in file from there
-- **Cherrypicked Samples**: `CHERRYPICK` - ([]) Array of integers representing sample indexes to utilize
+- **Cherrypicked Samples to Use**: `CHERRYPICK` - ([]) Array of integers representing sample indexes to utilize
+- **Cherrypicked Samples to Skip**: `CHERRYSKIP` - ([]) Array of integers representing sample indexes to skip
 
 ## Setting Up the Environment
 

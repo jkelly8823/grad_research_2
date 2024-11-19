@@ -34,3 +34,5 @@
 
 - [X] Create a filtered subset of primevul for samples we actually care about
     - [ ] Buffer overflow, Write/read outside of buffer, null ptr dereference, etc.
+
+- [ ] Maybe add a filter? Replace all tabs with like 4 spaces or something

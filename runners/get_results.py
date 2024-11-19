@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import f1_score, roc_curve, auc, accuracy_score, precision_score, recall_score
+from sklearn.metrics import f1_score, roc_curve, auc, accuracy_score, precision_score, recall_score, precision_recall_curve, confusion_matrix
 import ast
 from dotenv import load_dotenv
 

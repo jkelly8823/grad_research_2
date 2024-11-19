@@ -320,8 +320,16 @@ graph = workflow.compile()
 # PROMPTS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-samples, convos = form_prompts(src=os.getenv('DATA_SRC').upper(),prompt=START_PROMPT, limit=os.getenv('SAMPLE_LIMIT'), start_idx=os.getenv('START_IDX'), cherrypick=ast.literal_eval(os.getenv('CHERRYPICK')))
+samples, convos = form_prompts(
+    src=os.getenv('DATA_SRC').upper(),
+    prompt=START_PROMPT,
+    limit=int(os.getenv('SAMPLE_LIMIT')),
+    start_idx=int(os.getenv('START_IDX')),
+    cherrypick=ast.literal_eval(os.getenv('CHERRYPICK')),
+    cherryskip=ast.literal_eval(os.getenv('CHERRYSKIP'))
+)
 
+# print(samples)
 # print(convos)
 
 # One-Off Sample
@@ -375,6 +383,12 @@ for i in range(0,len(convos)):
     )
     
     directory_path = os.getenv('OUTPUT_PTH')
+    # Check if the directory exists
+    if not os.path.exists(directory_path+'/full'):
+        os.makedirs(directory_path+'/full')
+    if not os.path.exists(directory_path+'/parsed'):
+        os.makedirs(directory_path+'/parsed')
+
     num_items = len(os.listdir(directory_path+'/full'))
     f =  open(f"{directory_path}/full/run_{num_items}_full.txt","a+", encoding="utf-8", errors="replace")
     
