@@ -110,6 +110,9 @@ def getResults():
     plt.savefig(ROOT_PTH + '/roc_curve.png')
     plt.show() if SHOW else None
 
+    if os.getenv('DATA_SRC').upper() == 'DEVIGN':
+        return
+
     # ------------------------
     # Grouped by CWE
     # ------------------------
@@ -240,6 +243,8 @@ def getResults():
 
     if os.getenv('DATA_SRC').upper() == 'PRIMEVUL':
         generate_outcome_graphs(df, SHOW, ROOT_PTH)
+    
+    return
 
 if __name__ == '__main__':
     getResults()

@@ -36,3 +36,5 @@
     - [ ] Buffer overflow, Write/read outside of buffer, null ptr dereference, etc.
 
 - [ ] Maybe add a filter? Replace all tabs with like 4 spaces or something
+
+- [ ] Add devign to readme and such

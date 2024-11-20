@@ -17,6 +17,8 @@ def form_prompts(src, prompt, limit=-1, start_idx=-1,cherrypick = [], cherryskip
         samples = get_brysonfixed_data(os.getenv('BRYSONFIXED'), limit, start_idx, cherrypick, cherryskip)
     elif src == 'PRIMEVUL':
         samples = get_primevul_data(os.getenv('PRIMEVUL'), limit, start_idx, cherrypick, cherryskip)
+    elif src == 'DEVIGN':
+        samples = get_devign_data(os.getenv('DEVIGN'), limit, start_idx, cherrypick, cherryskip)
     for sample in samples:
         sample['prompt'] = prompt.format(func = sample['func'])
         convos.append([HumanMessage(sample['prompt'])])
