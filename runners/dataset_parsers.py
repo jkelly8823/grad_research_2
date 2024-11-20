@@ -3,6 +3,7 @@ import re
 import os
 import tiktoken
 import ast
+import pandas as pd
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -21,6 +22,12 @@ def format_cleaner(code):
     
     # Further clean up additional escape sequences like backslashes or newlines
     cleaned_code = cleaned_code.replace("\\\\", "\\").replace("\\n", "\n").replace('\\"', '"')
+
+    # Normalize indentation (convert tabs to 4 spaces)
+    cleaned_code = cleaned_code.replace("\t", "    ")
+    
+    # Remove excessive whitespace (more than 2 consecutive blank lines)
+    cleaned_code = re.sub(r"\n\s*\n", "\n\n", cleaned_code)
         
     return cleaned_code
 
@@ -193,7 +200,6 @@ def get_devign_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherryskip
     for sample in samples:
         idx += 1
 
-        print(idx, start_idx)
         if start_idx != -1 and start_idx != idx:
             continue
         elif start_idx != -1 and start_idx == idx:
@@ -229,6 +235,62 @@ def get_devign_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherryskip
 
     return parsed_data
 
+def get_minh_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherryskip=[]):
+    parsed_data = []
+    
+    df = pd.read_csv(file_path)
+    
+    for idx, sample in df.iterrows():
+
+        if start_idx != -1 and start_idx != idx:
+            continue
+        elif start_idx != -1 and start_idx == idx:
+            start_idx = -1
+
+        if len(cherrypick) > 0 and idx not in cherrypick:
+            continue
+            
+        if len(cherryskip) > 0 and idx in cherryskip:
+            continue
+
+        
+        sample['vuln_func'] = format_cleaner(sample['vuln_func'])
+        src = f'minh_{sample["repo_name"]}_{sample["commit_id"]}'
+        dat = {
+            "source": src,
+            "idx": idx,
+            "func": sample['vuln_func'],
+            "vuln": 1,
+            "cwe": 'Unknown CWE'
+        }
+
+        if over_tokens(dat['func']):
+            print('Skipping a sample due to token length...')
+            continue
+        
+        parsed_data.append(dat)
+
+        sample['fix_vuln_func'] = format_cleaner(sample['fix_vuln_func'])
+        dat2 = {
+            "source": src,
+            "idx": idx,
+            "func": sample['fix_vuln_func'],
+            "vuln": 0,
+            "cwe": 'Unknown CWE'
+        }
+
+        if over_tokens(dat2['func']):
+            print('Skipping a sample due to token length...')
+            continue
+
+        parsed_data.append(dat2)
+
+        limit -= 2
+        if limit == 0:
+            break
+
+    return parsed_data
+
 
 if __name__ == '__main__':
     if os.getenv('DATA_SRC').upper() == 'BRYSON':
@@ -258,6 +320,14 @@ if __name__ == '__main__':
     elif os.getenv('DATA_SRC').upper() == 'DEVIGN':
         parsed = get_devign_data(
             file_path=os.getenv('DEVIGN'),
+            limit=int(os.getenv('SAMPLE_LIMIT')),
+            start_idx=int(os.getenv('START_IDX')),
+            cherrypick=ast.literal_eval(os.getenv('CHERRYPICK')),
+            cherryskip=ast.literal_eval(os.getenv('CHERRYSKIP'))
+        )
+    elif os.getenv('DATA_SRC').upper() == 'MINH':
+        parsed = get_minh_data(
+            file_path=os.getenv('MINH'),
             limit=int(os.getenv('SAMPLE_LIMIT')),
             start_idx=int(os.getenv('START_IDX')),
             cherrypick=ast.literal_eval(os.getenv('CHERRYPICK')),

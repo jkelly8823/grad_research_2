@@ -110,7 +110,7 @@ def getResults():
     plt.savefig(ROOT_PTH + '/roc_curve.png')
     plt.show() if SHOW else None
 
-    if os.getenv('DATA_SRC').upper() == 'DEVIGN':
+    if os.getenv('DATA_SRC').upper() in ['DEVIGN', 'MINH']:
         return
 
     # ------------------------
