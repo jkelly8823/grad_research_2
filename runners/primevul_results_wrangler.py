@@ -38,8 +38,8 @@ def get_primevul_pairs(idxs):
                         print("Entry contains too many values. Please enter the IDs in pairs.")
                     elif split_pair[0] not in sublist or split_pair[1] not in sublist:
                         print("Invalid IDs entered, please try again.")
-                    elif split_pair[0] in fixed_ids or split_pair[1] in fixed_ids:
-                        print('At least one of these IDs have already been paired, please try again.')
+                    # elif split_pair[0] in fixed_ids or split_pair[1] in fixed_ids:
+                    #     print('At least one of these IDs have already been paired, please try again.')
                     else:
                         break
                 fixed[(key[0], key[1] or i)] = split_pair

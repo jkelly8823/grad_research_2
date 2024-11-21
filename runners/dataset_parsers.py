@@ -95,7 +95,6 @@ def get_bryson_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherryskip
             break
     return parsed_data
 
-# Function to clean and parse the JSON data
 def get_brysonfixed_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherryskip=[]):
     cwe_mapping = {
                     'stack-based buffer overflow': ['CWE-121'],
@@ -291,6 +290,56 @@ def get_minh_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherryskip=[
 
     return parsed_data
 
+# Function to clean and parse the JSON data
+def get_diversevul_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherryskip=[]):
+    with open(file_path, "r") as f:
+        samples = f.readlines()
+    samples = [json.loads(sample) for sample in samples]
+    parsed_data = []
+    idx = -1
+    for sample in samples:
+        idx += 1
+
+        if start_idx != -1 and start_idx != idx:
+            continue
+        elif start_idx != -1 and start_idx == idx:
+            start_idx = -1
+
+        if len(cherrypick) > 0 and idx not in cherrypick:
+            continue
+
+        if len(cherryskip) > 0 and idx in cherryskip:
+            continue
+        
+        if len(sample['cwe']) == 0:
+            continue
+
+        try:
+            # Update the 'code' field with the cleaned string
+            sample['func'] = format_cleaner(sample['func'])
+
+            src = f'diversevul_{sample["project"]}_{sample["commit_id"]}'
+            dat = {
+                "source": src,
+                "idx": idx,
+                "func": sample['func'],
+                "vuln": sample['target'],
+                "cwe": sample['cwe']
+            }
+
+            if over_tokens(dat['func']):
+                print('Skipping a sample due to token length...')
+                continue
+
+            parsed_data.append(dat)
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON: {e}")
+        
+        limit -= 1
+        if limit == 0:
+            break
+    return parsed_data
+
 
 if __name__ == '__main__':
     if os.getenv('DATA_SRC').upper() == 'BRYSON':
@@ -328,6 +377,14 @@ if __name__ == '__main__':
     elif os.getenv('DATA_SRC').upper() == 'MINH':
         parsed = get_minh_data(
             file_path=os.getenv('MINH'),
+            limit=int(os.getenv('SAMPLE_LIMIT')),
+            start_idx=int(os.getenv('START_IDX')),
+            cherrypick=ast.literal_eval(os.getenv('CHERRYPICK')),
+            cherryskip=ast.literal_eval(os.getenv('CHERRYSKIP'))
+        )
+    elif os.getenv('DATA_SRC').upper() == 'DIVERSEVUL':
+        parsed = get_diversevul_data(
+            file_path=os.getenv('DIVERSEVUL'),
             limit=int(os.getenv('SAMPLE_LIMIT')),
             start_idx=int(os.getenv('START_IDX')),
             cherrypick=ast.literal_eval(os.getenv('CHERRYPICK')),
