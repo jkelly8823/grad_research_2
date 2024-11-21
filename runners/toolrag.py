@@ -68,6 +68,9 @@ def run_semgrep(code_sample: str, file_suffix: str) -> str:
     """Call to run the Semgrep static analysis tool."""
     return go_semgrep(code_sample, file_suffix)
 
+# Start SEMGREP
+start_semgrep_container()
+
 sast_tools = [run_flawfinder, run_cppcheck, run_appinspector, run_semgrep]
 fake_tools = [dummy_tool]
 tool_node = ToolNode(sast_tools+fake_tools)
@@ -440,5 +443,6 @@ for i in range(0,len(convos)):
         
         # Write data line to the file
         f3.write(",".join(map(str, line)) + '\n')
-    
+
+stop_semgrep_container()
 getResults()

@@ -4,6 +4,8 @@ import flawfinder
 import tempfile
 import os
 import subprocess
+from dotenv import load_dotenv
+load_dotenv()
 
 def make_tmpfile(code_sample: str, file_suffix: str) -> str:
     # Create a temporary file to store the code sample
@@ -117,23 +119,61 @@ def go_appinspector(code_sample: str, file_suffix: str) -> str:
         except Exception as e:
             print(f"Error deleting tmpfile: {e}")
 
+def start_semgrep_container():
+    # Start the persistent SEMGREP container
+    subprocess.run(
+        [
+            "docker", "run", "-d", 
+            "--name", "semgrep-container", 
+            "-e", f"SEMGREP_APP_TOKEN={os.getenv('SEMGREP_APP_TOKEN')}",
+            "-v", "D:/grad_research_2:/src",
+            "semgrep/semgrep",
+            "sleep", "infinity"  # Keeps the container running
+        ],
+        stdout=subprocess.DEVNULL,  # Suppress stdout
+        check=True
+    )
+    return
+
+def stop_semgrep_container():
+    subprocess.run(["docker", "stop", "semgrep-container"], stdout=subprocess.DEVNULL, check=True)
+    subprocess.run(["docker", "rm", "semgrep-container"], stdout=subprocess.DEVNULL, check=True)
+    return
+
+
 def go_semgrep(code_sample: str, file_suffix: str) -> str:
     try:
         # Create a temporary file with the code sample
         temp_file_path = make_tmpfile(code_sample, file_suffix)
+        container_pth = temp_file_path.replace('\\','/').replace("D:/grad_research_2","/src")
 
         # Run semgrep on the temporary file, capturing the output
         result = subprocess.run(
-            # Submit Scan Online too, use online ruleset
-            # ["docker", "run", "-e", f"SEMGREP_APP_TOKEN={os.getenv('SEMGREP_APP_TOKEN')}", "--rm", "-v", "D:/grad_research_2:/src", "semgrep/semgrep", "semgrep", "ci", "--quiet", "--subdir", temp_file_path],
-            # Local only, use local ruleset (?)
-            ["docker", "run", "-e", f"SEMGREP_APP_TOKEN={os.getenv('SEMGREP_APP_TOKEN')}", "--rm", "-v", "D:/grad_research_2:/src", "semgrep/semgrep", "semgrep", "scan", "--config=r/all", "--quiet", temp_file_path],
+            [
+                "docker", "exec", "semgrep-container",
+                "semgrep", "scan", 
+                "--config=r/all",
+                "--quiet",
+                container_pth
+            ],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            encoding='utf-8',
-            errors='replace'
+            encoding="utf-8",
+            errors="replace"
         )
+
+        # result = subprocess.run(
+        #     # Submit Scan Online too, use online ruleset
+        #     # ["docker", "run", "-e", f"SEMGREP_APP_TOKEN={os.getenv('SEMGREP_APP_TOKEN')}", "--rm", "-v", "D:/grad_research_2:/src", "semgrep/semgrep", "semgrep", "ci", "--quiet", "--subdir", temp_file_path],
+        #     # Local only, use local ruleset (?)
+        #     ["docker", "run", "-e", f"SEMGREP_APP_TOKEN={os.getenv('SEMGREP_APP_TOKEN')}", "--rm", "-v", "D:/grad_research_2:/src", "semgrep/semgrep", "semgrep", "scan", "--config=r/all", "--quiet", temp_file_path],
+        #     stdout=subprocess.PIPE,
+        #     stderr=subprocess.STDOUT,
+        #     text=True,
+        #     encoding='utf-8',
+        #     errors='replace'
+        # )
         # Capture the output from semgrep
         output = result.stdout
         split_str = '└─────────────────┘'
@@ -153,30 +193,34 @@ def go_semgrep(code_sample: str, file_suffix: str) -> str:
             print(f"Error deleting tmpfile: {e}")
 
 
-
-# test_code_snip = (
-#     "void calculateDiscountedPrice(char *userInput, int itemPrice, float discountRate) {\n"
-#     "    char buffer[10];\n"
-#     "    int discountedPrice;\n"
-#     "    float discountAmount;\n"
-#     "    if (isLoggedIn) {\n"
-#     "        strcpy(buffer, userInput);\n"
-#     "        discountAmount = (itemPrice * discountRate) / 100;\n"
-#     "        discountedPrice = itemPrice - (int)discountAmount;\n"
-#     "        sprintf(buffer, \"Discounted Price: %d\", discountedPrice);\n"
-#     "        printf(\"%s\\n\", buffer);\n"
-#     "    } else {\n"
-#     "        printf(\"User is not logged in.\\n\");\n"
-#     "    }\n"
-# "}\n"
-# )
-# print(go_flawfinder(test_code_snip,'.cpp'))
-# print("~"*30)
-# print(go_cppcheck(test_code_snip,'.cpp'))
-# print("~"*30)
-# print(go_appinspector(test_code_snip,'.cpp'))
-# print("~"*30)
-# print(go_semgrep(test_code_snip,'.cpp'))
+if __name__ == '__main__':
+    test_code_snip = (
+        "void calculateDiscountedPrice(char *userInput, int itemPrice, float discountRate) {\n"
+        "    char buffer[10];\n"
+        "    int discountedPrice;\n"
+        "    float discountAmount;\n"
+        "    if (isLoggedIn) {\n"
+        "        strcpy(buffer, userInput);\n"
+        "        discountAmount = (itemPrice * discountRate) / 100;\n"
+        "        discountedPrice = itemPrice - (int)discountAmount;\n"
+        "        sprintf(buffer, \"Discounted Price: %d\", discountedPrice);\n"
+        "        printf(\"%s\\n\", buffer);\n"
+        "    } else {\n"
+        "        printf(\"User is not logged in.\\n\");\n"
+        "    }\n"
+    "}\n"
+    )
+    # print(go_flawfinder(test_code_snip,'.cpp'))
+    # print("~"*30)
+    # print(go_cppcheck(test_code_snip,'.cpp'))
+    # print("~"*30)
+    # print(go_appinspector(test_code_snip,'.cpp'))
+    # print("~"*30)
+    start_semgrep_container()
+    print(go_semgrep(test_code_snip,'.cpp'))
+    print(go_semgrep(test_code_snip,'.cpp'))
+    print(go_semgrep(test_code_snip,'.cpp'))
+    stop_semgrep_container()
 
 # docker run --rm -it -v D:\grad_research_2\datasets\test:/tmp -v $(pwd):/app:rw -w /app -t ghcr.io/joernio/joern joern
 # docker run -e SEMGREP_APP_TOKEN= --rm -v "D:/grad_research_2:/src" semgrep/semgrep semgrep ci --subdir datasets/tst
