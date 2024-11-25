@@ -168,6 +168,9 @@ def get_primevul_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherrysk
         if len(cherryskip) > 0 and sample["idx"] in cherryskip:
             continue
 
+        print(sample["idx"])
+        print(sample["func"][1070:1080])
+
         sample['func'] = format_cleaner(sample['func'])
 
         src = f'primevul_{sample["project"]}_{sample["commit_id"]}'

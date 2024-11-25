@@ -96,8 +96,8 @@ import json
 
 cwes = list(set(cwe_top25_2023 + cwe_buffer_overflows + cwe_outside_buffer + cwe_null_ptr_dereference))
 
-f = open(r'D:\grad_research_2\datasets\PrimeVul\primevul_test_paired.jsonl', 'r')
-f2 = open(r'D:\grad_research_2\datasets\filtered_primevul_test_paired.jsonl', 'w+')
+f = open(r'D:\grad_research_2\datasets\PrimeVul\primevul_train_paired.jsonl', 'r')
+f2 = open(r'D:\grad_research_2\datasets\filtered_primevul_train_paired.jsonl', 'w+')
 samples = f.readlines()
 samples = [json.loads(sample) for sample in samples]
 for sample in samples:

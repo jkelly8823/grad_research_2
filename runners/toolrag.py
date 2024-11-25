@@ -45,7 +45,7 @@ VERBOSE = int(os.getenv('VERBOSE'))
 
 @tool
 def dummy_tool() -> str:
-    """This tool is NEVER to be used. It only exists to avoid errors."""
+    """THIS FUNCTION MAY NEVER, EVER BE CALLED UNDER ANY CIRCUMSTANCES."""
     return "Dummy tool call"
 
 @tool
