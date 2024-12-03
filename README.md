@@ -43,6 +43,9 @@ The project also allows configuration of paths for data sources and outputs:
 - **Result Path**: `RESULT_PTH` – Directory to save parsed run results (csv and png files with some analysis).
 - **BRYSON**: `BRYSON` - Path to file for Bryson's dataset
 - **PRIMEVUL** `PRIMEVUL` - Path to file for Primevul dataset
+- **DEVIGN** `DEVIGN` - Path to file for Devign dataset
+- **MINH** `MINH` - Path to file for Minh's dataset
+- **DIVERSEVUL** `DIVERSEVUL` - Path to file for Diversevul dataset
 
 ### Model Source and Model Names
 
@@ -50,10 +53,11 @@ Specify the model source and particular models for various functionalities:
 
 - **Main Model Source**: `MAIN_MODEL_SRC` - (`ANTHROPIC`, `OPENAI`), for all non-RAG instances
 - **RAG Model Source**: `RAG_MODEL_SRC` - (`ANTHROPIC`, `OPENAI`), for all RAG instances
-- **SAST Model**: `SRC_SAST_MODEL`- Replace `SRC` with your chosen model source, e.g. `ANTHROPIC_SAST_MODEL`
-- **Summarization Model**: `SRC_SUMMARIZE_MODEL`
-- **Analysis Model**: `SRC_ANALYSIS_MODEL`
-- **RAG Model**: `SRC_RAG_MODEL`
+- **SAST Model**: `SRC_SAST_MODEL` - Replace `SRC` with your chosen model source, e.g. `ANTHROPIC_SAST_MODEL`
+- **Summarization Model**: `SRC_SUMMARIZE_MODEL` - Replace `SRC` with your chosen model source, e.g. `ANTHROPIC_SAST_MODEL`
+- **Analysis Model**: `SRC_ANALYSIS_MODEL` - Replace `SRC` with your chosen model source, e.g. `ANTHROPIC_SAST_MODEL`
+- **RAG Model**: `SRC_RAG_MODEL` - Replace `SRC` with your chosen model source, e.g. `ANTHROPIC_SAST_MODEL`
+- **Isolation Model Source**: `OPENAI_ISOLATION_MODEL` - OpenAI model to be used for isolated analysis testing
 
 ### General Settings
 
@@ -98,6 +102,17 @@ To start the project, execute the main script:
 ```bash
 py .\runners\toolrag.py
 ```
+## Running Isolation Tests
+To run isolation tests, execute the main script:  
+```bash
+py .\runners\openai_isolation.py
+```
+Use the following flags to control behavior:
+- `-c` to create a batch file
+- `-r` to submit a batch job
+- `-s BATCHID` to check status of a batch job
+- `-v` to write the verdicts file from a jsonl batch output
+- `-a` to run analysis scripts
 ## Additional Information
 ### Model Selection
 The ```.env``` file allows flexibility in choosing between different model sources (OpenAI or Anthropic). Ensure that the selected model configurations align with the source specified in MODEL_SRC. This setup supports various model tasks, including:

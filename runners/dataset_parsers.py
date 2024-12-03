@@ -17,18 +17,31 @@ def over_tokens(sample):
     return False
 
 def format_cleaner(code):
-    # Decode the escaped string (removes unnecessary escape characters)
-    cleaned_code = bytes(code, "utf-8").decode("unicode_escape")
+    cleaned_code = code
+    try:
+        # Decode the escaped string (removes unnecessary escape characters)
+        cleaned_code = bytes(code, "utf-8").decode("unicode_escape")
+    except Exception as e:
+        print(e)
     
-    # Further clean up additional escape sequences like backslashes or newlines
-    cleaned_code = cleaned_code.replace("\\\\", "\\").replace("\\n", "\n").replace('\\"', '"')
+    try:
+        # Further clean up additional escape sequences like backslashes or newlines
+        cleaned_code = cleaned_code.replace("\\\\", "\\").replace("\\n", "\n").replace('\\"', '"')
+    except Exception as e:
+        print(e)
+    
+    try:
+        # Normalize indentation (convert tabs to 4 spaces)
+        cleaned_code = cleaned_code.replace("\t", "    ")
+    except Exception as e:
+        print(e)
 
-    # Normalize indentation (convert tabs to 4 spaces)
-    cleaned_code = cleaned_code.replace("\t", "    ")
-    
-    # Remove excessive whitespace (more than 2 consecutive blank lines)
-    cleaned_code = re.sub(r"\n\s*\n", "\n\n", cleaned_code)
-        
+    try:
+        # Remove excessive whitespace (more than 2 consecutive blank lines)
+        cleaned_code = re.sub(r"\n\s*\n", "\n\n", cleaned_code)
+    except Exception as e:
+        print(e)
+
     return cleaned_code
 
 def bryson_backlash_fixer(text):
@@ -168,8 +181,8 @@ def get_primevul_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherrysk
         if len(cherryskip) > 0 and sample["idx"] in cherryskip:
             continue
 
-        print(sample["idx"])
-        print(sample["func"][1070:1080])
+        # print(sample["idx"])
+        # print(sample["func"][1070:1080])
 
         sample['func'] = format_cleaner(sample['func'])
 

@@ -5,7 +5,7 @@ from collections import defaultdict
 
 # ------------------------------------------
 
-data_path = r"D:\grad_research_2\datasets\finetunes_train_primevul_v2.jsonl"
+data_path = r"D:\grad_research_2\datasets\isolate_finetunes_train_primevul.jsonl"
 
 # Load the dataset
 with open(data_path, 'r', encoding='utf-8') as f:
