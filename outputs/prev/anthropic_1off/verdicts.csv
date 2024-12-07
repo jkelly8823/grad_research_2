@@ -1,0 +1,2 @@
+run,source,idx,true_vuln,predicted_vuln,predicted_confidence,cwe
+0,primevul_ImageMagick6_450949ed017f009b399c937cf362f0058eacc5fa,194989,1,0,8,["CWE-190"]

@@ -1,0 +1,7 @@
+cwe,Metric,Score
+CWE-190,Accuracy,0.0
+CWE-190,Precision,0.0
+CWE-190,Recall,0.0
+CWE-190,F1 Score,0.0
+CWE-190,AUC,
+CWE-190,Avg Confidence,0.8

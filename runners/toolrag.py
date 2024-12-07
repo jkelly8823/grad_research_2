@@ -187,7 +187,7 @@ def human_feedback(state):
         prompt = HUMAN_SUMMARIZER_ANALYZER
         target = 'Analyzer'
     elif state['sender'] == 'Rag_subgraph':
-        if state.get('rag_calls',-1) == 0:
+        if state.get('rag_calls',-1) <= 0:
             prompt = HUMAN_RAGLIMIT_ANALYZER.format(results=results)
         else:
             prompt = HUMAN_RAG_ANALYZER.format(results=results)

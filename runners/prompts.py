@@ -117,3 +117,11 @@ REWRITER_SYSTEM = """You a question re-writer that converts an input question to
      for vectorstore retrieval. Look at the input and try to reason about the underlying semantic intent / meaning."""
 
 REWRITER_HUMAN = "Here is the initial question: \n\n {question} \n Formulate an improved question."
+
+print("Global variables:")
+globs = globals().copy()
+for name, value in globs.items():
+    # Exclude internal variables starting with '__'
+    if not name.startswith('__'):
+        print(f"{name}: {value}")
+        print("~"*100)

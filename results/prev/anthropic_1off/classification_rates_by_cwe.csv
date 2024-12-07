@@ -1,0 +1,5 @@
+cwe,Metric,Rate
+CWE-190,True Positive Rate,0.0
+CWE-190,True Negative Rate,0.0
+CWE-190,False Positive Rate,0.0
+CWE-190,False Negative Rate,1.0
