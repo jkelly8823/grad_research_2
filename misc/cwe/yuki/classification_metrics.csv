@@ -1,0 +1,7 @@
+Metric,Score
+Accuracy,0.85
+Precision,0.848
+Recall,0.966
+F1 Score,0.903
+AUC,0.749
+Avg Confidence,0.882

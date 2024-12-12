@@ -439,10 +439,25 @@ for i in range(0,len(convos)):
         
         # Prepare the line of data to write
         status, confidence = extract_vulnerability_info(final_output)
-        line = [num_items, samples[i]['source'], samples[i]['idx'], samples[i]['vuln'], status, confidence, json.dumps(samples[i]['cwe'])]
+        line = [
+            num_items,
+            samples[i]['source'],
+            samples[i]['idx'],
+            samples[i]['vuln'],
+            status,
+            confidence,
+            json.dumps(samples[i]['cwe'])
+        ]
+            
+        formatted_line = []
+        for x in line:
+            tmp = str(x).replace('"', "'")
+            if '[' in tmp:
+                tmp = '"' + tmp + '"'
+            formatted_line.append(tmp)
         
         # Write data line to the file
-        f3.write(",".join(map(str, line)) + '\n')
+        f3.write(",".join(formatted_line) + "\n")
 
 stop_semgrep_container()
 getResults()

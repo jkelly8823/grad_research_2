@@ -23,6 +23,8 @@ def form_prompts(src, prompt, limit=-1, start_idx=-1,cherrypick = [], cherryskip
         samples = get_minh_data(os.getenv('MINH'), limit, start_idx, cherrypick, cherryskip)
     elif src == 'DIVERSEVUL':
         samples = get_diversevul_data(os.getenv('DIVERSEVUL'), limit, start_idx, cherrypick, cherryskip)
+    elif 'CWE' in src:
+        samples = get_cwe_data(os.getenv('CWE'), limit, start_idx, cherrypick, cherryskip)
     for sample in samples:
         sample['prompt'] = prompt.format(func = sample['func'])
         convos.append([HumanMessage(sample['prompt'])])

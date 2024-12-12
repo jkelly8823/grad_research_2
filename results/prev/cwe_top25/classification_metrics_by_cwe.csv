@@ -1,0 +1,139 @@
+cwe,Metric,Score
+CWE-119,Accuracy,0.8
+CWE-125,Accuracy,0.5
+CWE-190,Accuracy,0.8
+CWE-20,Accuracy,1.0
+CWE-22,Accuracy,0.75
+CWE-269,Accuracy,1.0
+CWE-287,Accuracy,1.0
+CWE-306,Accuracy,0.5
+CWE-352,Accuracy,1.0
+CWE-362,Accuracy,0.6666666666666666
+CWE-416,Accuracy,1.0
+CWE-434,Accuracy,0.5
+CWE-476,Accuracy,1.0
+CWE-502,Accuracy,1.0
+CWE-77,Accuracy,0.6666666666666666
+CWE-78,Accuracy,1.0
+CWE-787,Accuracy,1.0
+CWE-79,Accuracy,1.0
+CWE-798,Accuracy,1.0
+CWE-862,Accuracy,1.0
+CWE-863,Accuracy,1.0
+CWE-89,Accuracy,0.8
+CWE-94,Accuracy,1.0
+CWE-119,Precision,0.8
+CWE-125,Precision,0.5
+CWE-190,Precision,0.8
+CWE-20,Precision,1.0
+CWE-22,Precision,0.75
+CWE-269,Precision,1.0
+CWE-287,Precision,1.0
+CWE-306,Precision,0.5
+CWE-352,Precision,1.0
+CWE-362,Precision,0.6666666666666666
+CWE-416,Precision,1.0
+CWE-434,Precision,0.5
+CWE-476,Precision,1.0
+CWE-502,Precision,1.0
+CWE-77,Precision,0.75
+CWE-78,Precision,1.0
+CWE-787,Precision,1.0
+CWE-79,Precision,1.0
+CWE-798,Precision,1.0
+CWE-862,Precision,1.0
+CWE-863,Precision,1.0
+CWE-89,Precision,0.8
+CWE-94,Precision,1.0
+CWE-119,Recall,1.0
+CWE-125,Recall,1.0
+CWE-190,Recall,1.0
+CWE-20,Recall,1.0
+CWE-22,Recall,1.0
+CWE-269,Recall,1.0
+CWE-287,Recall,1.0
+CWE-306,Recall,1.0
+CWE-352,Recall,1.0
+CWE-362,Recall,1.0
+CWE-416,Recall,1.0
+CWE-434,Recall,1.0
+CWE-476,Recall,1.0
+CWE-502,Recall,1.0
+CWE-77,Recall,0.75
+CWE-78,Recall,1.0
+CWE-787,Recall,1.0
+CWE-79,Recall,1.0
+CWE-798,Recall,1.0
+CWE-862,Recall,1.0
+CWE-863,Recall,1.0
+CWE-89,Recall,1.0
+CWE-94,Recall,1.0
+CWE-119,F1 Score,0.8888888888888888
+CWE-125,F1 Score,0.6666666666666666
+CWE-190,F1 Score,0.8888888888888888
+CWE-20,F1 Score,1.0
+CWE-22,F1 Score,0.8571428571428571
+CWE-269,F1 Score,1.0
+CWE-287,F1 Score,1.0
+CWE-306,F1 Score,0.6666666666666666
+CWE-352,F1 Score,1.0
+CWE-362,F1 Score,0.8
+CWE-416,F1 Score,1.0
+CWE-434,F1 Score,0.6666666666666666
+CWE-476,F1 Score,1.0
+CWE-502,F1 Score,1.0
+CWE-77,F1 Score,0.75
+CWE-78,F1 Score,1.0
+CWE-787,F1 Score,1.0
+CWE-79,F1 Score,1.0
+CWE-798,F1 Score,1.0
+CWE-862,F1 Score,1.0
+CWE-863,F1 Score,1.0
+CWE-89,F1 Score,0.8888888888888888
+CWE-94,F1 Score,1.0
+CWE-119,AUC,0.5
+CWE-125,AUC,0.5
+CWE-190,AUC,0.375
+CWE-20,AUC,
+CWE-22,AUC,0.5
+CWE-269,AUC,
+CWE-287,AUC,
+CWE-306,AUC,0.5
+CWE-352,AUC,
+CWE-362,AUC,0.75
+CWE-416,AUC,
+CWE-434,AUC,0.25
+CWE-476,AUC,
+CWE-502,AUC,1.0
+CWE-77,AUC,0.8125
+CWE-78,AUC,
+CWE-787,AUC,
+CWE-79,AUC,
+CWE-798,AUC,
+CWE-862,AUC,
+CWE-863,AUC,
+CWE-89,AUC,0.5
+CWE-94,AUC,1.0
+CWE-119,Avg Confidence,0.9
+CWE-125,Avg Confidence,0.9
+CWE-190,Avg Confidence,0.8800000000000001
+CWE-20,Avg Confidence,0.8400000000000001
+CWE-22,Avg Confidence,0.9
+CWE-269,Avg Confidence,0.9
+CWE-287,Avg Confidence,0.9
+CWE-306,Avg Confidence,0.9
+CWE-352,Avg Confidence,0.9
+CWE-362,Avg Confidence,0.8333333333333334
+CWE-416,Avg Confidence,0.9
+CWE-434,Avg Confidence,0.875
+CWE-476,Avg Confidence,0.9
+CWE-502,Avg Confidence,0.9333333333333332
+CWE-77,Avg Confidence,0.9
+CWE-78,Avg Confidence,0.9000000000000001
+CWE-787,Avg Confidence,0.9000000000000001
+CWE-79,Avg Confidence,0.9
+CWE-798,Avg Confidence,0.9
+CWE-862,Avg Confidence,0.8500000000000001
+CWE-863,Avg Confidence,0.9
+CWE-89,Avg Confidence,0.9
+CWE-94,Avg Confidence,0.875

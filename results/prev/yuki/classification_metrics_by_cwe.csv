@@ -1,0 +1,97 @@
+cwe,Metric,Score
+CWE-104,Accuracy,0.5
+CWE-1069,Accuracy,1.0
+CWE-1255,Accuracy,1.0
+CWE-135,Accuracy,1.0
+CWE-300,Accuracy,1.0
+CWE-307,Accuracy,0.75
+CWE-309,Accuracy,1.0
+CWE-336,Accuracy,1.0
+CWE-338,Accuracy,1.0
+CWE-594,Accuracy,1.0
+CWE-763,Accuracy,0.5714285714285714
+CWE-790,Accuracy,1.0
+CWE-797,Accuracy,1.0
+CWE-799,Accuracy,0.5
+CWE-909,Accuracy,1.0
+CWE-95,Accuracy,1.0
+CWE-104,Precision,0.0
+CWE-1069,Precision,1.0
+CWE-1255,Precision,1.0
+CWE-135,Precision,1.0
+CWE-300,Precision,1.0
+CWE-307,Precision,0.75
+CWE-309,Precision,1.0
+CWE-336,Precision,1.0
+CWE-338,Precision,1.0
+CWE-594,Precision,1.0
+CWE-763,Precision,0.5714285714285714
+CWE-790,Precision,1.0
+CWE-797,Precision,1.0
+CWE-799,Precision,0.5
+CWE-909,Precision,1.0
+CWE-95,Precision,1.0
+CWE-104,Recall,0.0
+CWE-1069,Recall,1.0
+CWE-1255,Recall,1.0
+CWE-135,Recall,1.0
+CWE-300,Recall,1.0
+CWE-307,Recall,1.0
+CWE-309,Recall,1.0
+CWE-336,Recall,1.0
+CWE-338,Recall,1.0
+CWE-594,Recall,1.0
+CWE-763,Recall,1.0
+CWE-790,Recall,1.0
+CWE-797,Recall,1.0
+CWE-799,Recall,1.0
+CWE-909,Recall,1.0
+CWE-95,Recall,1.0
+CWE-104,F1 Score,0.0
+CWE-1069,F1 Score,1.0
+CWE-1255,F1 Score,1.0
+CWE-135,F1 Score,1.0
+CWE-300,F1 Score,1.0
+CWE-307,F1 Score,0.8571428571428571
+CWE-309,F1 Score,1.0
+CWE-336,F1 Score,1.0
+CWE-338,F1 Score,1.0
+CWE-594,F1 Score,1.0
+CWE-763,F1 Score,0.7272727272727273
+CWE-790,F1 Score,1.0
+CWE-797,F1 Score,1.0
+CWE-799,F1 Score,0.6666666666666666
+CWE-909,F1 Score,1.0
+CWE-95,F1 Score,1.0
+CWE-104,AUC,0.5
+CWE-1069,AUC,1.0
+CWE-1255,AUC,
+CWE-135,AUC,
+CWE-300,AUC,
+CWE-307,AUC,0.5
+CWE-309,AUC,
+CWE-336,AUC,
+CWE-338,AUC,
+CWE-594,AUC,1.0
+CWE-763,AUC,0.5
+CWE-790,AUC,
+CWE-797,AUC,
+CWE-799,AUC,0.5
+CWE-909,AUC,1.0
+CWE-95,AUC,1.0
+CWE-104,Avg Confidence,0.8
+CWE-1069,Avg Confidence,0.8500000000000001
+CWE-1255,Avg Confidence,0.8500000000000001
+CWE-135,Avg Confidence,0.9
+CWE-300,Avg Confidence,0.9
+CWE-307,Avg Confidence,0.9
+CWE-309,Avg Confidence,0.9
+CWE-336,Avg Confidence,0.9
+CWE-338,Avg Confidence,0.9
+CWE-594,Avg Confidence,0.8
+CWE-763,Avg Confidence,0.9000000000000001
+CWE-790,Avg Confidence,0.9
+CWE-797,Avg Confidence,0.9
+CWE-799,Avg Confidence,0.9
+CWE-909,Avg Confidence,0.9
+CWE-95,Avg Confidence,0.8666666666666667

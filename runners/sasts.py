@@ -218,8 +218,6 @@ if __name__ == '__main__':
     # print("~"*30)
     start_semgrep_container()
     print(go_semgrep(test_code_snip,'.cpp'))
-    print(go_semgrep(test_code_snip,'.cpp'))
-    print(go_semgrep(test_code_snip,'.cpp'))
     stop_semgrep_container()
 
 # docker run --rm -it -v D:\grad_research_2\datasets\test:/tmp -v $(pwd):/app:rw -w /app -t ghcr.io/joernio/joern joern

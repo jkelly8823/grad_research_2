@@ -7,6 +7,34 @@ import pandas as pd
 from dotenv import load_dotenv
 load_dotenv()
 
+cwe_top25_2023 = [
+    '787',  # Out-of-bounds Write
+    '79',   # Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')
+    '89',   # SQL Injection
+    '416',  # Use After Free
+    '78',   # Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')
+    '20',   # Improper Input Validation
+    '125',  # Out-of-bounds Read
+    '22',   # Path Traversal
+    '352',  # Cross-Site Request Forgery (CSRF)
+    '434',  # Unrestricted Upload of File with Dangerous Type
+    '862',  # Missing Authorization
+    '476',  # NULL Pointer Dereference
+    '287',  # Improper Authentication
+    '190',  # Integer Overflow or Wraparound
+    '502',  # Deserialization of Untrusted Data
+    '77',   # Improper Neutralization of Special Elements used in a Command ('Command Injection')
+    '119',  # Improper Restriction of Operations within the Bounds of a Memory Buffer ('Buffer Overflow')
+    '798',  # Use of Hard-coded Credentials
+    '918',  # Server-Side Request Forgery (SSRF)
+    '306',  # Missing Authentication for Critical Function
+    '362',  # Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition')
+    '269',  # Improper Privilege Management
+    '94',   # Improper Control of Generation of Code ('Code Injection')
+    '863',  # Improper Authorization
+    '276',  # Incorrect Default Permissions
+]
+
 def over_tokens(sample):
     max_tokens = int(os.getenv('SAMPLE_TOKEN_LIMIT'))
     encoding = tiktoken.get_encoding("cl100k_base")
@@ -356,6 +384,78 @@ def get_diversevul_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherry
             break
     return parsed_data
 
+def get_cwe_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherryskip=[]):
+    parsed_data = []
+
+    src = os.getenv('DATA_SRC')
+
+    pths = []
+    if src == 'CWEYUKI':
+        with open(file_path + '/yuki_paths.txt', 'r+') as f:
+            pths = f.readlines()
+            pths = [pth.strip() for pth in pths]
+    elif src == 'CWETOP25':
+        for root, _, files in os.walk(file_path):  # Loop through files in CWETOP25 branch
+            for file_name in files:
+                # Check if the file's parent directory matches one of the cwe_top25_2023
+                if any(cwe == os.path.basename(root) for cwe in cwe_top25_2023):
+                    pths.append(os.path.join(root, file_name))
+    elif src == 'CWE':
+        for root, _, files in os.walk(file_path):  # Loop through files in CWE branch
+            if 'cwe_samples' in root:  # Ensure we're in 'cwe_samples'
+                for file_name in files:
+                    pths.append(os.path.join(root, file_name))
+
+    
+    idx = -1
+    for pth in pths:
+        idx += 1
+        
+        if start_idx != -1 and start_idx != idx:
+            continue
+        elif start_idx != -1 and start_idx == idx:
+            start_idx = -1
+
+        if len(cherrypick) > 0 and idx not in cherrypick:
+            continue
+            
+        if len(cherryskip) > 0 and idx in cherryskip:
+            continue
+            
+        sample = {}
+        with open(pth, 'r+') as f:
+            sample['func'] = f.read()
+        if 'good' in pth.lower():
+            sample['target'] = 0
+        else:
+            sample['target'] = 1
+
+        pth = pth.replace('/', '\\')
+        nm = pth[pth.rfind('\\')+1:].replace('.', '_')
+        cwe = 'CWE-' + nm[:nm.find('_')]
+        sample['func'] = format_cleaner(sample['func'])
+
+        src = f'cwe_{nm}'
+        dat = {
+            "source": src,
+            "idx": idx,
+            "func": sample['func'],
+            "vuln": sample['target'],
+            "cwe": cwe
+        }
+
+        if over_tokens(dat['func']):
+            print('Skipping a sample due to token length...')
+            continue
+    
+        parsed_data.append(dat)
+
+        limit -= 1
+        if limit == 0:
+            break
+
+    return parsed_data
+
 
 if __name__ == '__main__':
     if os.getenv('DATA_SRC').upper() == 'BRYSON':
@@ -401,6 +501,14 @@ if __name__ == '__main__':
     elif os.getenv('DATA_SRC').upper() == 'DIVERSEVUL':
         parsed = get_diversevul_data(
             file_path=os.getenv('DIVERSEVUL'),
+            limit=int(os.getenv('SAMPLE_LIMIT')),
+            start_idx=int(os.getenv('START_IDX')),
+            cherrypick=ast.literal_eval(os.getenv('CHERRYPICK')),
+            cherryskip=ast.literal_eval(os.getenv('CHERRYSKIP'))
+        )
+    elif 'CWE' in os.getenv('DATA_SRC').upper():
+        parsed = get_cwe_data(
+            file_path=os.getenv('CWE'),
             limit=int(os.getenv('SAMPLE_LIMIT')),
             start_idx=int(os.getenv('START_IDX')),
             cherrypick=ast.literal_eval(os.getenv('CHERRYPICK')),

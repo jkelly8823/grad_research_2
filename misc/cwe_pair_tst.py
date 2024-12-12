@@ -22,9 +22,14 @@ result['score'] = result['P-C'] / denominator
 
 sorted_grouped = result.sort_values(by='score', ascending=False)
 sorted_grouped = sorted_grouped.drop('true_cwe', axis=1)
-print(sorted_grouped)
 sorted_grouped.columns = ['cwe', 'PC', 'PV', 'PB', 'PR', 'score']
 
+# Convert all columns that can be numeric to numeric
+sorted_grouped = sorted_grouped.apply(pd.to_numeric, errors='ignore')
+
+# Round numeric columns to 3 decimal places
+sorted_grouped = sorted_grouped.round(3)
+
 print(sorted_grouped)
 
-sorted_grouped.to_csv('misc/cwe_pairwise_scoring.csv', index=False)
+sorted_grouped.to_csv('misc/cwe/cwe_pairwise_scoring.csv', index=False)

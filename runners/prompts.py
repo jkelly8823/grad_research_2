@@ -118,10 +118,10 @@ REWRITER_SYSTEM = """You a question re-writer that converts an input question to
 
 REWRITER_HUMAN = "Here is the initial question: \n\n {question} \n Formulate an improved question."
 
-print("Global variables:")
-globs = globals().copy()
-for name, value in globs.items():
-    # Exclude internal variables starting with '__'
-    if not name.startswith('__'):
-        print(f"{name}: {value}")
-        print("~"*100)
+# print("Global variables:")
+# globs = globals().copy()
+# for name, value in globs.items():
+#     # Exclude internal variables starting with '__'
+#     if not name.startswith('__'):
+#         print(f"{name}: {value}")
+#         print("~"*100)
