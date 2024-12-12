@@ -227,21 +227,21 @@ def generate_outcome_graphs(src_df, SHOW, ROOT_PTH):
     plt.savefig(ROOT_PTH + '/outcome_rates.png')
     plt.show() if SHOW else None
 
-    # Outcome Counts Grouped by CWE
+        # Outcome Counts Grouped by CWE
     plt.figure(figsize=(14, 8))  # Increase figure size for readability
     sns.barplot(
-        x='true_cwe', 
-        y='Count', 
-        hue='Outcome', 
-        data=cwe_outcome_counts.melt(id_vars=['true_cwe'], var_name='Outcome', value_name='Count'), 
-        palette='viridis', 
+        x='Outcome',
+        y='Count',
+        hue='true_cwe',
+        data=cwe_outcome_counts.melt(id_vars=['true_cwe'], var_name='Outcome', value_name='Count'),
+        palette='tab20',
         errorbar=None
     )
     plt.title('Counts of Outcomes Grouped by CWE')
-    plt.xlabel('CWE')
+    plt.xlabel('Outcome')
     plt.ylabel('Count')
-    plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
-    plt.legend(title='Outcome', bbox_to_anchor=(1.05, 1), loc='upper left')  # Adjust legend position
+    plt.xticks(rotation=0)  # Rotate x-axis labels for better readability
+    plt.legend(title='CWE', bbox_to_anchor=(1.05, 1), loc='upper left')  # Adjust legend position
     plt.tight_layout()  # Adjust layout to prevent overlap
     plt.savefig(ROOT_PTH + '/outcome_counts_by_cwe.png')
     plt.show() if SHOW else None
@@ -250,18 +250,18 @@ def generate_outcome_graphs(src_df, SHOW, ROOT_PTH):
     # Outcome Rates Grouped by CWE
     plt.figure(figsize=(14, 8))  # Increase figure size for readability
     sns.barplot(
-        x='true_cwe', 
+        x='Outcome', 
         y='Rate', 
-        hue='Outcome', 
+        hue='true_cwe', 
         data=cwe_outcome_rates.melt(id_vars=['true_cwe'], var_name='Outcome', value_name='Rate'), 
-        palette='viridis', 
+        palette='tab20', 
         errorbar=None
     )
-    plt.title('Counts of Outcomes Grouped by CWE')
-    plt.xlabel('CWE')
+    plt.title('Rates of Outcomes Grouped by CWE')
+    plt.xlabel('Outcome')
     plt.ylabel('Rate')
     plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
-    plt.legend(title='Outcome', bbox_to_anchor=(1.05, 1), loc='upper left')  # Adjust legend position
+    plt.legend(title='CWE', bbox_to_anchor=(1.05, 1), loc='upper left')  # Adjust legend position
     plt.tight_layout()  # Adjust layout to prevent overlap
     plt.savefig(ROOT_PTH + '/outcome_rates_by_cwe.png')
     plt.show() if SHOW else None

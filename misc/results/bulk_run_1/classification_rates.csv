@@ -1,0 +1,5 @@
+Metric,Rate
+True Positive Rate,0.629
+True Negative Rate,0.387
+False Positive Rate,0.613
+False Negative Rate,0.371

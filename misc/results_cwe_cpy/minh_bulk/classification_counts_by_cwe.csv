@@ -1,0 +1,5 @@
+cwe,Metric,Count
+Unknown CWE,TP,11.0
+Unknown CWE,TN,3.0
+Unknown CWE,FP,10.0
+Unknown CWE,FN,2.0

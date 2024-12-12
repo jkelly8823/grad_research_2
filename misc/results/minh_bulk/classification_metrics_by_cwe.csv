@@ -1,0 +1,2 @@
+cwe,Accuracy,Precision,Recall,F1Score,AUC,AvgConfidence
+Unknown CWE,0.538,0.524,0.846,0.647,0.515,0.862

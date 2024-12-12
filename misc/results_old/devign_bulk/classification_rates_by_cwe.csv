@@ -1,0 +1,5 @@
+cwe,Metric,Rate
+Unknown CWE,True Positive Rate,0.7
+Unknown CWE,True Negative Rate,0.4594594594594595
+Unknown CWE,False Positive Rate,0.5405405405405406
+Unknown CWE,False Negative Rate,0.3

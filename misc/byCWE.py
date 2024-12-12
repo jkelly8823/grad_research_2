@@ -3,7 +3,7 @@ import os
 import shutil
 
 # Define the directory path to start the search
-directory_path = r"D:\grad_research_2\results\prev"
+directory_path = r"D:\grad_research_2\misc\results_cwe"
 
 # Loop through the directory and its subdirectories
 for root, dirs, files in os.walk(directory_path):
@@ -11,8 +11,9 @@ for root, dirs, files in os.walk(directory_path):
         # Check if the file contains 'cwe' and ends with '.csv'
         if 'old' not in root and 'anthropic' not in root:
             pth = os.path.join(root, file)
-            folder = pth[:pth.rfind("\\")].replace("results\prev", "misc\cwe")
+            folder = pth[:pth.rfind("\\")].replace("results\prev", r"misc\results").replace(r'misc\results_cwe', r'misc\results')
             nm = pth[pth.rfind("\\"):]
+            print(pth)
             print(nm)
             print(folder)
             os.makedirs(folder, exist_ok=True)

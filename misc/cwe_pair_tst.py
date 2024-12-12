@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 # Define the directory path to start the search
-directory_path = r"D:\grad_research_2\results\prev"
+directory_path = r"D:\grad_research_2\misc\results_cwe"
 df = pd.DataFrame(columns=['cwe','P-C','P-V','P-B','P-R'])
 
 # Loop through the directory and its subdirectories
@@ -14,6 +14,7 @@ for root, dirs, files in os.walk(directory_path):
             pth = os.path.join(root, file)
             df2 = pd.read_csv(pth, header=0)
             df = pd.concat([df, df2])
+            print(pth)
 
 result = df.groupby('cwe', as_index=False).sum()  
 denominator = result['P-V'] + result['P-B'] + result['P-R']
@@ -32,4 +33,4 @@ sorted_grouped = sorted_grouped.round(3)
 
 print(sorted_grouped)
 
-sorted_grouped.to_csv('misc/cwe/cwe_pairwise_scoring.csv', index=False)
+sorted_grouped.to_csv('misc/results/cwe_pairwise_scoring.csv', index=False)

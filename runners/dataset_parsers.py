@@ -176,7 +176,7 @@ def get_brysonfixed_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherr
                 "idx": idx,
                 "func": item['code'],
                 "vuln": item['vulnerable'],
-                "cwe": cwe_mapping.get(item['category'].lower(),['Unknown CWE'])
+                "cwe": cwe_mapping.get(item['category'].lower(),['[Unknown CWE]'])
             }
 
             if over_tokens(dat['func']):
@@ -263,7 +263,7 @@ def get_devign_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherryskip
             "idx": idx,
             "func": sample['func'],
             "vuln": sample['target'],
-            "cwe": 'Unknown CWE'
+            "cwe": '[Unknown CWE]'
         }
 
         if over_tokens(dat['func']):
@@ -304,7 +304,7 @@ def get_minh_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherryskip=[
             "idx": idx,
             "func": sample['vuln_func'],
             "vuln": 1,
-            "cwe": 'Unknown CWE'
+            "cwe": '[Unknown CWE]'
         }
 
         if over_tokens(dat['func']):
@@ -319,7 +319,7 @@ def get_minh_data(file_path, limit=-1, start_idx=-1, cherrypick=[], cherryskip=[
             "idx": idx,
             "func": sample['fix_vuln_func'],
             "vuln": 0,
-            "cwe": 'Unknown CWE'
+            "cwe": '[Unknown CWE]'
         }
 
         if over_tokens(dat2['func']):

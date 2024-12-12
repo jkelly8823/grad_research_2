@@ -10,14 +10,15 @@ from primevul_isolation_results_wrangler import *
 
 dotenv.load_dotenv()
 
-def getResults():
+def getResults(out_pth=os.getenv('OUTPUT_PTH'), res_pth=os.getenv('RESULT_PTH'), updater=False):
 
     # Show Plots
     SHOW = int(os.getenv('SHOW'))
-    ROOT_PTH = os.getenv('RESULT_PTH')
+    ROOT_PTH = res_pth
+    os.makedirs(ROOT_PTH,exist_ok=True)
 
     # Load CSV into DataFrame, skipping the first row and stripping whitespace from headers
-    file_path = os.getenv('OUTPUT_PTH')+'/verdicts.csv'  # Replace with your file path
+    file_path = out_pth+'/verdicts.csv'  # Replace with your file path
     df = pd.read_csv(file_path, header=0)
     df.columns = df.columns.str.strip()  # Remove any leading/trailing whitespace
     df = df.dropna(subset=["predicted_confidence"])
@@ -40,11 +41,17 @@ def getResults():
     f1 = f1_score(df['true_vuln'], df['predicted_vuln'])
 
     # Normalize predicted_confidence to a 0-1 range for ROC/AUC
+    # df['predicted_confidence_normalized'] = df['predicted_confidence'] / 100
+    # df['predicted_pos_confidence_normalized'] = df.apply(
+    #     lambda row: row['predicted_confidence_normalized'] 
+    #     if row['predicted_vuln'] == 1 
+    #     else 1 - row['predicted_confidence_normalized'], axis=1
+    # )
     df['predicted_confidence_normalized'] = df['predicted_confidence'] / 100
     df['predicted_pos_confidence_normalized'] = df.apply(
-        lambda row: row['predicted_confidence_normalized'] 
+        lambda row: 0.5 + row['predicted_confidence_normalized']/2
         if row['predicted_vuln'] == 1 
-        else 1 - row['predicted_confidence_normalized'], axis=1
+        else 0.5 - row['predicted_confidence_normalized']/2, axis=1
     )
 
     # Calculate ROC curve and AUC
@@ -162,10 +169,15 @@ def getResults():
     metrics_df.to_csv(ROOT_PTH + '/classification_metrics_by_cwe.csv', index=False)
 
     # Plot and save the classification counts (TP, TN, FP, FN)
-    # plt.figure(figsize=(14, 8))
-    # sns.barplot(x='Metric', y='Count', data=cwe_grouped[['TP', 'TN']], palette='viridis')
-    cwe_grouped[['TP', 'TN', 'FP', 'FN']].plot(kind='bar', figsize=(14, 8))
+    # Create the seaborn barplot
+    plt.figure(figsize=(14, 8))  # Increase figure size for readability
+    sns.barplot(x='Metric', y='Count', hue='true_cwe', data=counts_df, palette='tab20')
     plt.title('True Positive, True Negative, False Positive, False Negative Counts by CWE')
+    plt.xlabel('Metrics')
+    plt.ylabel('Count')
+    plt.xticks(rotation=0)
+    plt.legend(title='CWE', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
     plt.savefig(ROOT_PTH + '/classification_counts_by_cwe.png')
     plt.show() if SHOW else None
 
@@ -186,24 +198,25 @@ def getResults():
 
     # TP/TN/FP/FN Rates Graph grouped by CWE
     plt.figure(figsize=(14, 8))  # Increase figure size for readability
-    sns.barplot(x='true_cwe', y='Rate', hue='Metric', data=rates_df_grouped, palette='viridis', errorbar=None)
+    sns.barplot(x='Metric', y='Rate', hue='true_cwe', data=rates_df_grouped, palette='tab20', errorbar=None)
     plt.title('True Positive, True Negative, False Positive, False Negative Rates by CWE')
-    plt.xlabel('CWE')
+    plt.xlabel('Metrics')
     plt.ylabel('Rate')
-    plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
-    plt.legend(title='Metric', bbox_to_anchor=(1.05, 1), loc='upper left')  # Adjust legend position
-    plt.tight_layout()  # Adjust layout to prevent overlap
-    plt.savefig(ROOT_PTH + '/classification_rates_by_cwe.png')
+    plt.xticks(rotation=0)
+    plt.legend(title='CWE', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.savefig(ROOT_PTH + '/classification_rates_by_cwe.png', bbox_inches='tight')  # Ensure legend fits
     plt.show() if SHOW else None
 
-    # Plot the results for grouped by CWE
-    cwe_grouped[['Accuracy', 'Precision', 'Recall', 'F1 Score', 'AUC', 'Avg Confidence']].plot(kind='bar', figsize=(14, 8))
+    plt.figure(figsize=(14, 8))  # Increase figure size for readability
+    sns.barplot(x='Metric', y='Score', hue='true_cwe', data=metrics_df, palette='tab20', errorbar=None)
     plt.title('Classification Metrics by CWE')
+    plt.xlabel('Metrics')
     plt.ylabel('Metric Value')
-    plt.xticks(rotation=90)
-    plt.legend(title='Metric', bbox_to_anchor=(1.05, 1), loc='upper left')  # Adjust legend position
+    plt.xticks(rotation=0)
+    plt.legend(title='CWE', bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.tight_layout()
-    plt.savefig(ROOT_PTH + '/classification_metrics_by_cwe.png')
+    plt.savefig(ROOT_PTH + '/classification_metrics_by_cwe.png', bbox_inches='tight')  # Ensure legend fits
     plt.show() if SHOW else None
 
     # ROC Curve for grouped metrics (optional based on user needs)
@@ -243,7 +256,8 @@ def getResults():
     # and inversely predicts the labels for the pair.
 
     if os.getenv('DATA_SRC').upper() == 'PRIMEVUL':
-        generate_outcome_graphs(df, SHOW, ROOT_PTH)
+        if not updater or any(x in ROOT_PTH for x in ['bulk_run_1', 'filtered_bulk_run', 'isolated_std', 'isolated_finetune']):
+            generate_outcome_graphs(df, SHOW, ROOT_PTH)
     
     return
 

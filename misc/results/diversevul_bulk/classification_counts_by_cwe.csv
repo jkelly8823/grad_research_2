@@ -1,0 +1,8 @@
+cwe,TruePositive,TrueNegative,FalsePositive,FalseNegative
+CWE-119,13.0,0.0,0.0,7.0
+CWE-20,6.0,0.0,0.0,10.0
+CWE-269,0.0,0.0,0.0,1.0
+CWE-287,2.0,0.0,0.0,0.0
+CWE-362,3.0,0.0,0.0,10.0
+CWE-787,8.0,0.0,0.0,3.0
+CWE-94,2.0,0.0,0.0,1.0

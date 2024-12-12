@@ -1,0 +1,7 @@
+cwe,Metric,Score
+Unknown CWE,Accuracy,0.5671641791044776
+Unknown CWE,Precision,0.5121951219512195
+Unknown CWE,Recall,0.7
+Unknown CWE,F1 Score,0.5915492957746479
+Unknown CWE,AUC,0.5766891891891892
+Unknown CWE,Avg Confidence,0.8604477611940299
